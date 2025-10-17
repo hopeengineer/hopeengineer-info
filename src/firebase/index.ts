@@ -21,10 +21,17 @@ export function initializeFirebase() {
   return getSdks(getApp());
 }
 
+// --- CORRECTED PUBLIC INSTANCE INITIALIZATION ---
+// This robust check ensures the public app is initialized correctly on the client.
+const getPublicApp = () => {
+    const apps = getApps();
+    const publicApp = apps.find(app => app.name === 'publicApp');
+    return publicApp ? publicApp : initializeApp(firebaseConfig, 'publicApp');
+}
+
 // Public read-only instance for logged-out users
-const publicAppExists = getApps().some(app => app.name === 'publicApp');
-const publicApp = publicAppExists ? getApp('publicApp') : initializeApp(firebaseConfig, 'publicApp');
-export const publicFirestore = getFirestore(publicApp);
+export const publicFirestore = getFirestore(getPublicApp());
+
 
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
