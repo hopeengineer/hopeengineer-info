@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound, useRouter, useParams } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import Image from "next/image";
 import { useCollection, useFirestore, useUser, useMemoFirebase, publicFirestore } from "@/firebase";
 import { doc, query, collection, where, limit, getDocs, writeBatch } from "firebase/firestore";
@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type BlogPost = {
     id: string;
@@ -55,7 +55,7 @@ export default function BlogPostPage() {
   const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
-  const isLoading = isUserLoading || (!!postQuery && isPostsLoading);
+  const isLoading = isUserLoading || isPostsLoading;
   
   const isNotFound = !isLoading && !!postQuery && !post;
 
@@ -122,6 +122,8 @@ export default function BlogPostPage() {
   }
   
   if (!post) {
+    // This case handles the initial render where post is null but we are not yet in a "not found" state.
+    // Returning null or a skeleton here prevents the rest of the component from trying to access post.title etc.
     return null; 
   }
 
