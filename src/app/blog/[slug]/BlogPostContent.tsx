@@ -43,52 +43,52 @@ export default function BlogPostContent() {
   const slug = params.slug as string;
 
   const { toast } = useToast();
-  // We get isAdmin here, but it is not used for the main loading logic
+  // Get user status separately for showing admin buttons. This does not affect public data fetching.
   const { user, isAdmin } = useUser();
   
   // ALWAYS use the public firestore instance for viewing posts.
   const firestore: Firestore = publicFirestore;
 
-  // The query will be null until `slug` is available.
+  // The query will be null until `slug` from useParams is available. This prevents premature fetching.
   const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
   
-  // `isLoading` will be true only when the query is valid and fetching starts.
-  const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
+  // `isPostsLoading` will be true only when the query is valid and fetching starts.
+  const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
   
+  // A single, reliable loading state. We are loading if the query isn't ready yet OR if the query is running.
+  const isLoading = !postQuery || isPostsLoading;
+
+  // This effect is the final guard. It only runs after loading is complete.
+  // If, after all that, we still have no post, then it's a real 404.
   useEffect(() => {
-    // This effect is the final guard. It only runs after loading is complete.
-    // If, after all that, we still have no post, then it's a real 404.
-    if (!isLoading && postQuery && !post) {
+    if (!isLoading && !post) {
       notFound();
     }
-  }, [isLoading, postQuery, post]);
+  }, [isLoading, post]);
   
-  const handleClearAllPosts = async () => {
-    // This action requires an authenticated admin.
+  // This action requires an authenticated admin.
+  const handleDelete = () => {
+    // Re-check for admin firestore instance inside the handler to be safe.
     const { firestore: adminFirestore } = useUser();
-    if (!user || !adminFirestore) {
-        toast({variant: "destructive", title: "You must be logged in as an admin."});
-        return;
+    if (adminFirestore && post) {
+      const postRef = doc(adminFirestore, 'blogPosts', post.id);
+      deleteDocumentNonBlocking(postRef);
+      toast({
+        title: "Post deleted",
+        description: `"${post.title}" has been successfully deleted.`,
+      });
+      router.push("/blog");
+    } else {
+        toast({variant: 'destructive', title: 'Admin permissions required.'});
     }
+  };
 
-    toast({ title: "Clearing all posts..."});
-    const allPostsQuery = collection(adminFirestore, 'blogPosts');
-    const snapshot = await getDocs(allPostsQuery);
-    const batch = writeBatch(adminFirestore);
-    snapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-    });
-    await batch.commit();
-    toast({ title: "All posts have been cleared.", description: "You can now re-import them from the blog page."});
-    router.push("/blog");
-  }
-
-  // Show a skeleton if the query isn't ready yet, or if we are actively loading.
-  if (isLoading || !postQuery) {
+  // Show a skeleton while the data is loading.
+  if (isLoading) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <header className="mb-8 text-center">
@@ -107,23 +107,10 @@ export default function BlogPostContent() {
   }
   
   // Because of the useEffect above, if we reach this point and `post` is null,
-  // it's only for a brief moment before the redirect. We can show a minimal loader or null.
+  // it's only for a brief moment before the notFound() redirect happens.
   if (!post) {
       return null;
   }
-
-  const handleDelete = () => {
-    const { firestore: adminFirestore } = useUser();
-    if (adminFirestore && post) {
-      const postRef = doc(adminFirestore, 'blogPosts', post.id);
-      deleteDocumentNonBlocking(postRef);
-      toast({
-        title: "Post deleted",
-        description: `"${post.title}" has been successfully deleted.`,
-      });
-      router.push("/blog");
-    }
-  };
 
   return (
     <article className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
