@@ -4,7 +4,7 @@
 import { notFound, useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCollection, useUser, useMemoFirebase, publicFirestore } from "@/firebase";
-import { doc, query, collection, where, limit, getDocs, writeBatch, Firestore } from "firebase/firestore";
+import { doc, query, collection, where, limit, Firestore } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,9 +44,9 @@ export default function BlogPostContent() {
 
   const { toast } = useToast();
   // Get user status separately for showing admin buttons. This does not affect public data fetching.
-  const { user, isAdmin } = useUser();
+  const { isAdmin } = useUser();
   
-  // ALWAYS use the public firestore instance for viewing posts.
+  // ALWAYS use the public firestore instance for viewing posts. This works for logged-out users.
   const firestore: Firestore = publicFirestore;
 
   // The query will be null until `slug` from useParams is available. This prevents premature fetching.
@@ -55,20 +55,17 @@ export default function BlogPostContent() {
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
   
-  // `isPostsLoading` will be true only when the query is valid and fetching starts.
-  const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
+  // `isLoading` will be true only when the query is valid and fetching starts.
+  const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
   
-  // A single, reliable loading state. We are loading if the query isn't ready yet OR if the query is running.
-  const isLoading = !postQuery || isPostsLoading;
-
   // This effect is the final guard. It only runs after loading is complete.
   // If, after all that, we still have no post, then it's a real 404.
   useEffect(() => {
-    if (!isLoading && !post) {
+    if (!isLoading && !post && postQuery) {
       notFound();
     }
-  }, [isLoading, post]);
+  }, [isLoading, post, postQuery]);
   
   // This action requires an authenticated admin.
   const handleDelete = () => {
@@ -87,8 +84,8 @@ export default function BlogPostContent() {
     }
   };
 
-  // Show a skeleton while the data is loading.
-  if (isLoading) {
+  // Show a skeleton while the data is loading. This also handles the initial state where the query is not yet ready.
+  if (isLoading || !postQuery) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <header className="mb-8 text-center">
@@ -107,7 +104,7 @@ export default function BlogPostContent() {
   }
   
   // Because of the useEffect above, if we reach this point and `post` is null,
-  // it's only for a brief moment before the notFound() redirect happens.
+  // it's only for a brief moment before the notFound() redirect happens. We can return null.
   if (!post) {
       return null;
   }
