@@ -17,35 +17,38 @@ const WorkWithMePage = () => {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {services.map((service) => (
-          <Card key={service.title} className="flex flex-col transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-accent/20">
-            <div className="relative h-48 w-full">
-              <Image
-                src={service.image.imageUrl}
-                alt={service.title}
-                layout="fill"
-                objectFit="cover"
-                className="rounded-t-lg"
-                data-ai-hint={service.image.imageHint}
-              />
-            </div>
-            <CardHeader className="flex-1">
-              <CardTitle className="font-headline text-2xl">{service.title}</CardTitle>
-              <CardDescription>{service.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Link href="#">
-                  Get Started
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       <Testimonials />
+
+      <div className="mt-20">
+        <h2 className="text-3xl font-headline font-bold text-center mb-12">My Services</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {services.map((service) => (
+            <Card key={service.title} className="flex flex-col transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-accent/20">
+              <div className="relative h-48 w-full">
+                <Image
+                  src={service.image.imageUrl}
+                  alt={service.title}
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-t-lg"
+                  data-ai-hint={service.image.imageHint}
+                />
+              </div>
+              <CardHeader className="flex-1">
+                <CardTitle className="font-headline text-2xl">{service.title}</CardTitle>
+                <CardDescription>{service.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <Link href="#">
+                    Get Started
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
 
        <div className="mt-20 text-center">
         <h2 className="text-3xl font-headline font-bold mb-4">Ready to Begin?</h2>
