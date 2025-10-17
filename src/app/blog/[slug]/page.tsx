@@ -19,11 +19,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { use } from "react";
 
 type BlogPostPageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 type BlogPost = {
@@ -40,7 +41,7 @@ type BlogPost = {
 }
 
 export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = params;
+  const { slug } = use(params);
   const router = useRouter();
   const { toast } = useToast();
   const { isAdmin } = useUser();
