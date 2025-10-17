@@ -1,3 +1,4 @@
+'use server';
 import * as admin from 'firebase-admin';
 import { GoogleAuth } from 'google-auth-library';
 
@@ -17,7 +18,7 @@ export function getFirebaseAdminSdks() {
       ],
     });
 
-    const credential = new admin.credential.GoogleAuth(auth);
+    const credential = admin.credential.applicationDefault();
     
     admin.initializeApp({
       credential,
