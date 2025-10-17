@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import Link from "next/link";
 import { use } from "react";
 
 type BlogPostPageProps = {
@@ -92,7 +93,7 @@ function BlogPostContent({ slug }: { slug: string }) {
       return (
         <div className="container text-center py-20">
           <h1 className="text-3xl font-bold text-destructive mb-4">Post Not Found (404)</h1>
-          <p className="text-muted-foreground mb-8">The data might be improperly structured.</p>
+          <p className="text-muted-foreground mb-8">The data might be improperly structured or not imported correctly.</p>
           <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">TEMPORARY: Clear All Blog Posts</Button>
@@ -169,7 +170,9 @@ function BlogPostContent({ slug }: { slug: string }) {
       
       {isAdmin && (
          <div className="mt-12 flex justify-end gap-4 border-t pt-8">
-            <Button variant="outline" disabled>Edit</Button>
+            <Button variant="outline" asChild>
+                <Link href={`/blog/${post.slug}/edit`}>Edit</Link>
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">Delete</Button>
