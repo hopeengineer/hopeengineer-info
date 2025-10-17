@@ -20,6 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
+import { useEffect } from "react";
 
 type BlogPost = {
     id: string;
@@ -47,18 +48,22 @@ export default function BlogPostContent() {
   // Use the public instance if the user isn't logged in.
   const firestore = user ? loggedInFirestore : publicFirestore;
 
-  // This query is now memoized and will update correctly when `slug` changes.
+  // The query will be null until `firestore` and `slug` are available.
   const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
-
+  
+  // `isPostsLoading` will be true only when `postQuery` is valid and fetching starts.
   const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
   
-  // This is the combined loading state.
-  const isLoading = isUserLoading || isPostsLoading;
-
+  // This is the combined, robust loading state.
+  const isLoading = isUserLoading || (!!postQuery && isPostsLoading);
+  
+  // Condition for not found: query is valid, loading is finished, and we still have no post.
+  const isNotFound = !isLoading && !!postQuery && !post;
+  
   const handleClearAllPosts = async () => {
     if (!loggedInFirestore) return;
     toast({ title: "Clearing all posts..."});
@@ -73,8 +78,8 @@ export default function BlogPostContent() {
     router.push("/blog");
   }
 
-  // Loading skeleton state
-  if (isLoading) {
+  // Loading skeleton state. Show while user is loading OR while posts are loading with a valid query.
+  if (isLoading || !postQuery) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <header className="mb-8 text-center">
@@ -92,8 +97,7 @@ export default function BlogPostContent() {
     );
   }
   
-  // **CRITICAL FIX**: Only call notFound() AFTER loading is complete and the post is still not found.
-  if (!isLoading && !post) {
+  if (isNotFound) {
       if (isAdmin) {
         return (
           <div className="container text-center py-20">
@@ -122,6 +126,27 @@ export default function BlogPostContent() {
       notFound();
       return null;
   }
+  
+  if (!post) {
+      // This state is temporary while loading, so we show a skeleton.
+      // The `isNotFound` block above will handle the permanent not found case.
+      return (
+        <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <header className="mb-8 text-center">
+              <Skeleton className="h-12 w-3/4 mx-auto" />
+              <Skeleton className="h-6 w-1/2 mx-auto mt-4" />
+              <Skeleton className="h-4 w-1/3 mx-auto mt-6" />
+          </header>
+          <Skeleton className="w-full aspect-video rounded-lg" />
+          <div className="mt-8 space-y-4">
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-5/6" />
+          </div>
+        </div>
+      );
+  }
+
 
   const handleDelete = () => {
     if (loggedInFirestore && post) {
