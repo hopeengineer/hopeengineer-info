@@ -74,6 +74,7 @@ export default function BlogPostContent() {
   
   const handleClearAllPosts = async () => {
     // This action still requires an authenticated admin.
+    // We need to get a fresh instance of the admin firestore here.
     const { firestore: adminFirestore } = useUser();
     if (!user || !adminFirestore) {
         toast({variant: "destructive", title: "You must be logged in as an admin."});
@@ -112,7 +113,7 @@ export default function BlogPostContent() {
   }
   
   // This condition now safely handles the case where a post genuinely doesn't exist.
-  // The useEffect above will handle the actual 404 redirection.
+  // The useEffect above will handle the actual 404 redirection, but this provides a fallback UI.
   if (isNotFound) {
       // For an admin, we can show a special recovery UI. For others, the notFound() will take over.
       if (isAdmin) {
@@ -149,11 +150,7 @@ export default function BlogPostContent() {
       // This state should rarely be reached if the above logic is correct, but it's a safe fallback.
       return (
         <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            <header className="mb-8 text-center">
-                <Skeleton className="h-12 w-3/4 mx-auto" />
-                <Skeleton className="h-6 w-1/2 mx-auto mt-4" />
-            </header>
-            <Skeleton className="w-full aspect-video rounded-lg" />
+            <p className="text-center">Loading post...</p>
         </div>
       );
   }
