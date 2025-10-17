@@ -55,18 +55,6 @@ function BlogPostContent({ slug }: { slug: string }) {
   const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
-  const handleDelete = () => {
-    if (firestore && post) {
-      const postRef = doc(firestore, 'blogPosts', post.id);
-      deleteDocumentNonBlocking(postRef);
-      toast({
-        title: "Post deleted",
-        description: `"${post.title}" has been successfully deleted.`,
-      });
-      router.push("/blog");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -85,9 +73,26 @@ function BlogPostContent({ slug }: { slug: string }) {
     );
   }
 
-  if (!post) {
+  if (!isLoading && !post) {
     notFound();
   }
+
+  // We can only reach this point if isLoading is false and post exists.
+  // So we can safely assert that post is not null.
+  if (!post) return null;
+
+  const handleDelete = () => {
+    if (firestore && post) {
+      // Since we are querying by slug, the 'id' in the post object is the document ID.
+      const postRef = doc(firestore, 'blogPosts', post.id);
+      deleteDocumentNonBlocking(postRef);
+      toast({
+        title: "Post deleted",
+        description: `"${post.title}" has been successfully deleted.`,
+      });
+      router.push("/blog");
+    }
+  };
 
   return (
     <article className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
