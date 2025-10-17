@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
-import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking, useStorage } from '@/firebase';
-import { doc, query, collection, where, limit, serverTimestamp } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { doc, query, collection, where, limit, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useStorage } from '@/firebase/provider';
 
 const editPostSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
@@ -110,7 +111,7 @@ export default function EditBlogPostPage() {
             }
         };
 
-        updateDocumentNonBlocking(postRef, updatedData);
+        await updateDoc(postRef, updatedData);
 
         toast({
         title: 'Post Updated!',

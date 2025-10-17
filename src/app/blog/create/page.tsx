@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, addDocumentNonBlocking, useStorage } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useUser, useStorage } from '@/firebase';
+import { collection, serverTimestamp, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -87,8 +87,7 @@ export default function CreateBlogPostPage() {
       };
 
       const postsCollection = collection(firestore, 'blogPosts');
-      // Await the promise to ensure the document is created before proceeding
-      await addDocumentNonBlocking(postsCollection, newPost);
+      const docRef = await addDoc(postsCollection, newPost);
 
       toast({
         title: 'Post Created!',
