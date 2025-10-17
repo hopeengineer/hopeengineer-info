@@ -22,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { initiateEmailSignIn, initiateEmailSignUp, useAuth } from '@/firebase';
+import { initiateEmailSignIn, initiateEmailSignUp, useAuth, useUser } from '@/firebase';
 import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
@@ -31,6 +31,10 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+
 
 const loginSchema = z.object({
   email: z.string().email({
@@ -56,8 +60,14 @@ type AuthFormProps = {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const { toast } = useToast();
+  
   const isLogin = mode === 'login';
   const schema = isLogin ? loginSchema : signupSchema;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -67,8 +77,23 @@ export function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
+  useEffect(() => {
+    // If we were submitting and now we have a user, it means login/signup was successful.
+    if (isSubmitting && user) {
+      if (mode === 'signup') {
+        toast({
+          title: "Welcome!",
+          description: "You have successfully created an account.",
+        });
+      }
+      router.push('/');
+    }
+  }, [user, isSubmitting, router, toast, mode]);
+
+
   function onSubmit(data: z.infer<typeof schema>) {
     if (!auth) return;
+    setIsSubmitting(true);
     if (isLogin) {
       initiateEmailSignIn(auth, data.email, data.password);
     } else {
@@ -79,10 +104,19 @@ export function AuthForm({ mode }: AuthFormProps) {
   const handleGoogleSignIn = () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
+    setIsSubmitting(true);
     signInWithPopup(auth, provider).catch((error) => {
+      setIsSubmitting(false);
       console.error('Google sign-in error', error);
+      toast({
+        variant: 'destructive',
+        title: 'Google Sign-In Failed',
+        description: error.message,
+      })
     });
   };
+
+  const isLoading = isUserLoading || isSubmitting;
 
   return (
     <Card className="w-full max-w-md">
@@ -106,7 +140,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
+                    <Input placeholder="name@example.com" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -119,14 +153,14 @@ export function AuthForm({ mode }: AuthFormProps) {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="********" {...field} />
+                    <Input type="password" placeholder="********" {...field} disabled={isLoading}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              {isLogin ? 'Login' : 'Sign Up'}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Processing...' : isLogin ? 'Login' : 'Sign Up'}
             </Button>
           </form>
         </Form>
@@ -135,6 +169,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           variant="outline"
           className="w-full"
           onClick={handleGoogleSignIn}
+          disabled={isLoading}
         >
           <GoogleIcon className="mr-2 h-4 w-4" />
           {isLogin ? 'Sign in with Google' : 'Sign up with Google'}
