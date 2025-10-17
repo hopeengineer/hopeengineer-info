@@ -99,7 +99,7 @@ export default function EditBlogPostPage() {
             }
         };
 
-        await updateDoc(postRef, updatedData);
+        updateDoc(postRef, updatedData);
 
         toast({
         title: 'Post Updated!',
@@ -140,7 +140,7 @@ export default function EditBlogPostPage() {
     );
   }
 
-  if (!post && !isLoading) {
+  if (!post) {
     notFound();
   }
 
