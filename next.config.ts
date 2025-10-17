@@ -39,6 +39,12 @@ const nextConfig: NextConfig = {
         hostname: 'imgur.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'miro.medium.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
