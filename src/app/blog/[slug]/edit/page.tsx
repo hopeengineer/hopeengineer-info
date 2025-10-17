@@ -46,11 +46,13 @@ export default function EditBlogPostPage() {
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // The query will be null until `firestore` and `slug` are available.
   const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return query(collection(firestore, 'blogPosts'), where('slug', '==', slug), limit(1));
   }, [firestore, slug]);
 
+  // isPostLoading will be false initially, and then true when the query is valid and fetching starts.
   const { data: posts, isLoading: isPostLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
   
@@ -120,9 +122,19 @@ export default function EditBlogPostPage() {
     }
   };
   
-  const isLoading = isUserLoading || isPostLoading;
+  // Overall loading state is true if we are waiting for the user OR the query is valid and we're fetching the post.
+  const isLoading = isUserLoading || (!!postQuery && isPostLoading);
+  
+  // Condition for not found: query is valid, loading is finished, and we still have no post.
+  const isNotFound = !isLoading && !!postQuery && !post;
 
-  if (isLoading) {
+  if (isNotFound) {
+    notFound();
+    return null; // notFound() throws an error, but this makes it explicit.
+  }
+
+  // Show skeleton while loading or if the query isn't ready yet.
+  if (isLoading || !postQuery) {
     return (
         <div className="container max-w-4xl mx-auto py-12 px-4">
             <Card>
@@ -141,11 +153,6 @@ export default function EditBlogPostPage() {
     );
   }
   
-  // Only after loading is complete, if there's still no post, then we show a 404.
-  if (!post) {
-    notFound();
-  }
-
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <Card>
