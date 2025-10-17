@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
-import { use } from "react";
+import { use, useParams } from "react";
 
 type BlogPostPageProps = {
   params: Promise<{
@@ -207,6 +207,7 @@ function BlogPostContent({ slug }: { slug: string }) {
 }
 
 export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = use(params);
+  const resolvedParams = use(params);
+  const { slug } = resolvedParams;
   return <BlogPostContent slug={slug} />;
 }
