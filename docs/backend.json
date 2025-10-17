@@ -21,7 +21,7 @@
         },
         "lastName": {
           "type": "string",
-a          "description": "Last name of the user."
+          "description": "Last name of the user."
         },
         "registrationDate": {
           "type": "string",
