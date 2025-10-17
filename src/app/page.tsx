@@ -7,7 +7,7 @@ import { services } from "@/lib/data";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, publicFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,7 +25,8 @@ type BlogPost = {
 }
 
 export default function Home() {
-  const firestore = useFirestore();
+  // Use the public, read-only firestore instance. This ensures blog posts are always visible.
+  const firestore = publicFirestore;
 
   const latestPostsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
