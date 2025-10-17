@@ -1,18 +1,17 @@
 'use server';
 /**
- * @fileOverview An AI flow for importing and parsing articles from URLs.
+ * @fileOverview An AI flow for importing and parsing articles from raw HTML.
  *
- * - importArticle - A function that fetches and parses an article.
+ * - importArticle - A function that parses raw article HTML.
  * - ImportArticleInput - The input type for the importArticle function.
  * - ImportArticleOutput - The output type for the importArticle function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { parse } from 'node-html-parser';
 
 const ImportArticleInputSchema = z.object({
-  url: z.string().url({ message: "Please provide a valid URL." }).describe('The URL of the Medium or Substack article to import.'),
+  htmlContent: z.string().describe('The full HTML content of the article to import.'),
 });
 export type ImportArticleInput = z.infer<typeof ImportArticleInputSchema>;
 
@@ -36,7 +35,7 @@ const articleParserPrompt = ai.definePrompt({
     name: 'articleParserPrompt',
     input: { schema: z.object({ articleHtml: z.string() }) },
     output: { schema: ArticleDataSchema },
-    prompt: `You are an expert web content parser. You will be given the HTML content of a blog post.
+    prompt: `You are an expert web content parser. You will be given the full HTML content of a blog post.
     Your task is to extract the following information:
     1.  **Title**: The main title of the article.
     2.  **Description**: A concise one or two-sentence summary of the article.
@@ -60,30 +59,15 @@ const importArticleFlow = ai.defineFlow(
     inputSchema: ImportArticleInputSchema,
     outputSchema: ArticleDataSchema,
   },
-  async ({ url }) => {
-    // 1. Fetch the article content
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch article. Status: ${response.status}`);
-    }
-    const htmlContent = await response.text();
-
-    // 2. Parse the HTML to get the main article body for the LLM
-    const root = parse(htmlContent);
-    const articleBody = root.querySelector('body')?.innerHTML || '';
-
-    if (!articleBody) {
-        throw new Error('Could not find article content to parse.');
-    }
-
-    // 3. Use the LLM to extract structured and CLEANED data from the messy HTML
-    const { output } = await articleParserPrompt({ articleHtml: articleBody });
+  async ({ htmlContent }) => {
+    // 1. Use the LLM to extract structured and CLEANED data from the messy HTML
+    const { output } = await articleParserPrompt({ articleHtml: htmlContent });
     
     if (!output) {
         throw new Error('AI parsing failed to return data.');
     }
     
-    // 4. Return the structured, cleaned data to the client
+    // 2. Return the structured, cleaned data to the client
     return output;
   }
 );

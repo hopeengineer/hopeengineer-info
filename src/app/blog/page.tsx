@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { importArticle } from "@/ai/flows/import-article-flow";
 import { format } from "date-fns";
@@ -36,7 +36,7 @@ const BlogPage = () => {
   const { toast } = useToast();
   const router = useRouter();
   const [isImporting, setIsImporting] = useState(false);
-  const [importUrl, setImportUrl] = useState('');
+  const [importHtml, setImportHtml] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const postsQuery = useMemoFirebase(() => {
@@ -47,17 +47,17 @@ const BlogPage = () => {
   const { data: blogPosts, isLoading } = useCollection<BlogPost>(postsQuery);
 
   const handleImport = async () => {
-    if (!importUrl || !firestore) {
+    if (!importHtml || !firestore) {
         toast({
             variant: "destructive",
-            title: "URL is missing",
-            description: "Please enter a URL to import.",
+            title: "HTML is missing",
+            description: "Please paste the article's HTML content to import.",
         });
         return;
     }
     setIsImporting(true);
     try {
-        const parsedArticle = await importArticle({ url: importUrl });
+        const parsedArticle = await importArticle({ htmlContent: importHtml });
         
         const slug = parsedArticle.title
           .toLowerCase()
@@ -88,7 +88,7 @@ const BlogPage = () => {
             description: "The article has been imported and saved.",
         });
         setIsDialogOpen(false);
-        setImportUrl('');
+        setImportHtml('');
         // No need to manually refetch, useCollection will update automatically
     } catch (error) {
         console.error("Import error:", error);
@@ -127,27 +127,25 @@ const BlogPage = () => {
             <DialogTrigger asChild>
                 <Button variant="outline">
                     <Download className="mr-2 h-4 w-4" />
-                    Import from URL
+                    Import from HTML
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Import Article</DialogTitle>
+                    <DialogTitle>Import Article from HTML</DialogTitle>
                     <DialogDescription>
-                        Paste the URL of a Medium or Substack article to import it.
+                        Go to your article, view the page source, and paste the full HTML here.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="import-url" className="text-right">
-                            URL
-                        </Label>
-                        <Input
-                            id="import-url"
-                            value={importUrl}
-                            onChange={(e) => setImportUrl(e.target.value)}
-                            className="col-span-3"
-                            placeholder="https://medium.com/..."
+                    <div className="grid w-full gap-1.5">
+                        <Label htmlFor="import-html">Article HTML</Label>
+                        <Textarea
+                            id="import-html"
+                            value={importHtml}
+                            onChange={(e) => setImportHtml(e.target.value)}
+                            className="h-64 font-code text-xs"
+                            placeholder="<!DOCTYPE html>..."
                         />
                     </div>
                 </div>
@@ -187,7 +185,7 @@ const BlogPage = () => {
         <div className="text-center text-muted-foreground py-16">
           <h2 className="text-2xl font-semibold">No posts yet!</h2>
           <p className="mt-2">
-            {isAdmin ? "Click 'Import from URL' to add your first post." : "Check back soon for new content."}
+            {isAdmin ? "Click 'Import from HTML' to add your first post." : "Check back soon for new content."}
           </p>
         </div>
       )}
