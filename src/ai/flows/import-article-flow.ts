@@ -14,7 +14,7 @@ import { parse } from 'node-html-parser';
 import { format } from 'date-fns';
 
 const ImportArticleInputSchema = z.object({
-  url: z.string().url().describe('The URL of the Medium or Substack article to import.'),
+  url: z.string().url({ message: "Please provide a valid URL." }).describe('The URL of the Medium or Substack article to import.'),
 });
 export type ImportArticleInput = z.infer<typeof ImportArticleInputSchema>;
 

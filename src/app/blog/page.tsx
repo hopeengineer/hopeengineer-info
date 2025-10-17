@@ -62,10 +62,11 @@ const BlogPage = () => {
         setImportUrl('');
     } catch (error) {
         console.error("Import error:", error);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
         toast({
             variant: "destructive",
             title: "Import Failed",
-            description: "Could not import the article. Please check the URL and try again.",
+            description: `Could not import the article. ${errorMessage}`,
         });
     } finally {
         setIsImporting(false);
