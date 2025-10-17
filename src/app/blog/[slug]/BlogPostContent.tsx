@@ -43,7 +43,7 @@ export default function BlogPostContent() {
   const slug = params.slug as string;
 
   const { toast } = useToast();
-  // We get isAdmin here, but we will not use isUserLoading for the main loading state
+  // We get isAdmin here, but it is not used for the main loading logic
   const { user, isAdmin } = useUser();
   
   // ALWAYS use the public firestore instance for viewing posts.
@@ -55,26 +55,20 @@ export default function BlogPostContent() {
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
   
-  // The loading state `isPostsLoading` is now the primary indicator.
-  const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
+  // `isLoading` will be true only when the query is valid and fetching starts.
+  const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
   
-  // This is the simplified, robust loading state. It's only true if the query is valid and we are fetching.
-  const isLoading = !!postQuery && isPostsLoading;
-  
-  // A stable determination of notFound, only true after loading is complete and we still have no post.
-  const isNotFound = !isLoading && !!postQuery && !post;
-
   useEffect(() => {
-    // This effect will trigger the notFound() page only when `isNotFound` becomes stably true.
-    if (isNotFound) {
+    // This effect is the final guard. It only runs after loading is complete.
+    // If, after all that, we still have no post, then it's a real 404.
+    if (!isLoading && postQuery && !post) {
       notFound();
     }
-  }, [isNotFound]);
+  }, [isLoading, postQuery, post]);
   
   const handleClearAllPosts = async () => {
-    // This action still requires an authenticated admin.
-    // We need to get a fresh instance of the admin firestore here.
+    // This action requires an authenticated admin.
     const { firestore: adminFirestore } = useUser();
     if (!user || !adminFirestore) {
         toast({variant: "destructive", title: "You must be logged in as an admin."});
@@ -112,51 +106,13 @@ export default function BlogPostContent() {
     );
   }
   
-  // This condition now safely handles the case where a post genuinely doesn't exist.
-  // The useEffect above will handle the actual 404 redirection, but this provides a fallback UI.
-  if (isNotFound) {
-      // For an admin, we can show a special recovery UI. For others, the notFound() will take over.
-      if (isAdmin) {
-        return (
-          <div className="container text-center py-20">
-            <h1 className="text-3xl font-bold text-destructive mb-4">Post Not Found</h1>
-            <p className="text-muted-foreground mb-8">The requested post does not exist or could not be loaded.</p>
-             <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">TEMPORARY: Clear All Blog Posts</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete ALL posts from the database. This is a temporary tool to fix import issues.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleClearAllPosts}>Yes, delete everything</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-          </div>
-        );
-      }
-      // For non-admins, this will be a blank screen for a moment before the useEffect redirects to the 404 page.
-      return null;
-  }
-  
-  // We can only get here if isLoading is false and post exists.
+  // Because of the useEffect above, if we reach this point and `post` is null,
+  // it's only for a brief moment before the redirect. We can show a minimal loader or null.
   if (!post) {
-      // This state should rarely be reached if the above logic is correct, but it's a safe fallback.
-      return (
-        <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            <p className="text-center">Loading post...</p>
-        </div>
-      );
+      return null;
   }
 
   const handleDelete = () => {
-    // This action requires an authenticated admin firestore instance
     const { firestore: adminFirestore } = useUser();
     if (adminFirestore && post) {
       const postRef = doc(adminFirestore, 'blogPosts', post.id);
