@@ -56,6 +56,18 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
+  const handleDelete = () => {
+    if (firestore && post) {
+      const postRef = doc(firestore, 'blogPosts', post.id);
+      deleteDocumentNonBlocking(postRef);
+      toast({
+        title: "Post deleted",
+        description: `"${post.title}" has been successfully deleted.`,
+      });
+      router.push("/blog");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -77,18 +89,6 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   if (!post) {
     notFound();
   }
-
-  const handleDelete = () => {
-    if (firestore && post) {
-      const postRef = doc(firestore, 'blogPosts', post.id);
-      deleteDocumentNonBlocking(postRef);
-      toast({
-        title: "Post deleted",
-        description: `"${post.title}" has been successfully deleted.`,
-      });
-      router.push("/blog");
-    }
-  };
 
   return (
     <article className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
