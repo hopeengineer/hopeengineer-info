@@ -32,7 +32,7 @@ const Testimonials = () => {
           >
             <CarouselContent>
               {testimonials.map((testimonial) => (
-                <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={testimonial.id} className="md:basis-1/2">
                   <div className="p-1">
                     <Card className="overflow-hidden shadow-lg transform transition-transform duration-300 hover:scale-105">
                       <CardContent className="flex aspect-[4/3] items-center justify-center p-0">
