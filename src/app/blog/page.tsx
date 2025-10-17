@@ -52,9 +52,7 @@ const BlogPage = () => {
     const postsCollection = collection(firestore, "blogPosts");
     
     hardcodedBlogPosts.forEach(post => {
-      // Let firestore generate the document ID
       const docRef = doc(postsCollection); 
-      // Create a new object with slug at the top level
       const postData = {
         slug: post.slug,
         title: post.title,
@@ -101,9 +99,11 @@ const BlogPage = () => {
       
       {isAdmin && (
         <div className="mb-8 flex justify-center gap-4">
-          <Button variant="outline" disabled>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Post
+          <Button variant="outline" asChild>
+            <Link href="/blog/create">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Post
+            </Link>
           </Button>
           <Button variant="outline" onClick={handleImportPosts} disabled={isImporting || (blogPosts && blogPosts.length > 0)}>
             <Download className="mr-2 h-4 w-4" />
