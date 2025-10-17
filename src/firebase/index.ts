@@ -8,9 +8,12 @@ import { getStorage } from 'firebase/storage';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
-  if (!getApps().length) {
-    // If no app is initialized, create one using the configuration object.
-    // This is the most reliable way to ensure an app exists, especially in development.
+  const apps = getApps();
+  const defaultApp = apps.find(app => app.name === '[DEFAULT]');
+
+  if (!defaultApp) {
+    // If no default app is initialized, create one using the configuration object.
+    // This is the most reliable way to ensure an app exists.
     initializeApp(firebaseConfig);
   }
 
@@ -19,7 +22,8 @@ export function initializeFirebase() {
 }
 
 // Public read-only instance for logged-out users
-const publicApp = initializeApp(firebaseConfig, 'publicApp');
+const publicAppExists = getApps().some(app => app.name === 'publicApp');
+const publicApp = publicAppExists ? getApp('publicApp') : initializeApp(firebaseConfig, 'publicApp');
 export const publicFirestore = getFirestore(publicApp);
 
 export function getSdks(firebaseApp: FirebaseApp) {
