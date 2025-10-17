@@ -63,6 +63,9 @@ export interface UserHookResult {
   userError: Error | null;
   auth: Auth | null;
   isAdmin: boolean;
+  firestore: Firestore | null;
+  firebaseApp: FirebaseApp | null;
+  storage: FirebaseStorage | null;
 }
 
 // React Context
@@ -130,15 +133,34 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
 // --- HOOKS ---
 
-export const useFirebase = (): FirebaseServicesAndUser => {
+export const useFirebase = (): FirebaseServicesAndUser | {
+  user: null;
+  isUserLoading: boolean;
+  userError: Error | null;
+  isAdmin: boolean;
+  firebaseApp: null;
+  firestore: null;
+  auth: null;
+  storage: null;
+} => {
   const context = useContext(FirebaseContext);
 
   if (context === undefined) {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
   }
-
+  
   if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.storage) {
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
+    // If services are not ready, return a state that reflects this for non-authenticated users.
+    return {
+      user: context.user,
+      isUserLoading: context.isUserLoading,
+      userError: context.userError,
+      isAdmin: context.isAdmin,
+      firebaseApp: null,
+      firestore: null,
+      auth: null,
+      storage: null
+    };
   }
 
   return {
@@ -154,23 +176,35 @@ export const useFirebase = (): FirebaseServicesAndUser => {
 };
 
 export const useAuth = (): Auth => {
-  const { auth } = useFirebase();
-  return auth;
+  const context = useFirebase();
+  if (!context.auth) {
+    throw new Error('useAuth requires an authenticated user and must be used within a component that is guarded by an authentication check.');
+  }
+  return context.auth;
 };
 
 export const useFirestore = (): Firestore => {
-  const { firestore } = useFirebase();
-  return firestore;
+  const context = useFirebase();
+  if (!context.firestore) {
+    throw new Error('useFirestore requires an authenticated user and must be used within a component that is guarded by an authentication check.');
+  }
+  return context.firestore;
 };
 
 export const useStorage = (): FirebaseStorage => {
-    const { storage } = useFirebase();
-    return storage;
+    const context = useFirebase();
+    if (!context.storage) {
+        throw new Error('useStorage requires an authenticated user and must be used within a component that is guarded by an authentication check.');
+    }
+    return context.storage;
 }
 
 export const useFirebaseApp = (): FirebaseApp => {
-  const { firebaseApp } = useFirebase();
-  return firebaseApp;
+  const context = useFirebase();
+  if (!context.firebaseApp) {
+      throw new Error('useFirebaseApp requires an authenticated user and must be used within a component that is guarded by an authentication check.');
+  }
+  return context.firebaseApp;
 };
 
 type MemoFirebase <T> = T & {__memo?: boolean};
@@ -185,6 +219,20 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 }
 
 export const useUser = (): UserHookResult => {
-  const { user, isUserLoading, userError, auth, isAdmin } = useFirebase();
-  return { user, isUserLoading, userError, auth, isAdmin };
+  const context = useContext(FirebaseContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a FirebaseProvider.');
+  }
+  
+  // For useUser, it's okay for services to be null if the user is not logged in.
+  return { 
+    user: context.user, 
+    isUserLoading: context.isUserLoading, 
+    userError: context.userError, 
+    auth: context.auth, 
+    isAdmin: context.isAdmin,
+    firestore: context.firestore,
+    firebaseApp: context.firebaseApp,
+    storage: context.storage,
+  };
 };

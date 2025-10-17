@@ -2,8 +2,8 @@
 
 import { notFound, useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useCollection, useFirestore, useUser, useMemoFirebase, publicFirestore } from "@/firebase";
-import { doc, query, collection, where, limit, getDocs, writeBatch } from "firebase/firestore";
+import { useCollection, useUser, useMemoFirebase, publicFirestore } from "@/firebase";
+import { doc, query, collection, where, limit, getDocs, writeBatch, Firestore } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 type BlogPost = {
     id: string;
@@ -44,20 +44,16 @@ export default function BlogPostContent() {
   const { toast } = useToast();
   const { user, isAdmin, isUserLoading } = useUser();
   
-  // Conditionally get the authenticated firestore instance ONLY if the user is logged in.
-  // This prevents the useFirestore() hook from throwing an error for logged-out users.
-  const loggedInFirestore = user ? useFirestore() : null;
+  // ALWAYS use the public firestore instance for viewing posts.
+  // Admin actions will be guarded by the `isAdmin` check.
+  const firestore: Firestore = publicFirestore;
 
-  // If the user is logged in, use their dedicated instance. Otherwise, use the public one.
-  const firestore = useMemo(() => loggedInFirestore || publicFirestore, [loggedInFirestore]);
-
-  // The query will be null until `firestore` and `slug` are available.
+  // The query will be null until `slug` is available.
   const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
   
-  // `isPostsLoading` will be true only when `postQuery` is valid and fetching starts.
   const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
   
@@ -68,11 +64,18 @@ export default function BlogPostContent() {
   const isNotFound = !isLoading && !!postQuery && !post;
   
   const handleClearAllPosts = async () => {
-    if (!loggedInFirestore) return;
+    if (!user) {
+        toast({variant: "destructive", title: "You must be logged in as an admin."});
+        return;
+    }
+    // This action requires an authenticated firestore instance, which we get from `useUser`
+    const { firestore: adminFirestore } = useUser();
+    if (!adminFirestore) return;
+
     toast({ title: "Clearing all posts..."});
-    const allPostsQuery = collection(loggedInFirestore, 'blogPosts');
+    const allPostsQuery = collection(adminFirestore, 'blogPosts');
     const snapshot = await getDocs(allPostsQuery);
-    const batch = writeBatch(loggedInFirestore);
+    const batch = writeBatch(adminFirestore);
     snapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
     });
@@ -152,8 +155,10 @@ export default function BlogPostContent() {
 
 
   const handleDelete = () => {
-    if (loggedInFirestore && post) {
-      const postRef = doc(loggedInFirestore, 'blogPosts', post.id);
+    // This action requires an authenticated firestore instance
+    const { firestore: adminFirestore } = useUser();
+    if (adminFirestore && post) {
+      const postRef = doc(adminFirestore, 'blogPosts', post.id);
       deleteDocumentNonBlocking(postRef);
       toast({
         title: "Post deleted",
