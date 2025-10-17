@@ -33,6 +33,10 @@ export function initializeFirebase() {
   return getSdks(getApp());
 }
 
+// Public read-only instance for logged-out users
+const publicApp = initializeApp(firebaseConfig, 'publicApp');
+export const publicFirestore = getFirestore(publicApp);
+
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,

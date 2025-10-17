@@ -2,7 +2,7 @@
 
 import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useUser, useMemoFirebase, publicFirestore } from "@/firebase";
 import { doc, query, collection, where, limit, getDocs, writeBatch } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -45,23 +45,30 @@ type BlogPost = {
 function BlogPostContent({ slug }: { slug: string }) {
   const router = useRouter();
   const { toast } = useToast();
-  const { isAdmin } = useUser();
-  const firestore = useFirestore();
+  const { user, isAdmin, isUserLoading } = useUser();
+  const loggedInFirestore = useFirestore(); // This can throw if user is not logged in
+
+  // Choose the correct firestore instance.
+  // When the user is not logged in, `useFirestore()` would throw an error.
+  // We check `user` from `useUser()` which is safe for logged-out states.
+  const firestore = user ? loggedInFirestore : publicFirestore;
 
   const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
   
-  const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
+  const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
+  const isLoading = isUserLoading || isPostsLoading;
+
   const handleClearAllPosts = async () => {
-    if (!firestore) return;
+    if (!loggedInFirestore) return; // Must use authenticated instance
     toast({ title: "Clearing all posts..."});
-    const allPostsQuery = collection(firestore, 'blogPosts');
+    const allPostsQuery = collection(loggedInFirestore, 'blogPosts');
     const snapshot = await getDocs(allPostsQuery);
-    const batch = writeBatch(firestore);
+    const batch = writeBatch(loggedInFirestore);
     snapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
     });
@@ -119,14 +126,12 @@ function BlogPostContent({ slug }: { slug: string }) {
 
   // This check is now safe because it only runs after loading is complete.
   if (!post) {
-    // This case should be handled by the notFound() call above,
-    // but it's good practice to have a fallback.
     return null; 
   }
 
   const handleDelete = () => {
-    if (firestore && post) {
-      const postRef = doc(firestore, 'blogPosts', post.id);
+    if (loggedInFirestore && post) { // Must use authenticated instance
+      const postRef = doc(loggedInFirestore, 'blogPosts', post.id);
       deleteDocumentNonBlocking(postRef);
       toast({
         title: "Post deleted",

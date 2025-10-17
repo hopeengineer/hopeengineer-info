@@ -4,8 +4,8 @@ import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlusCircle, Download } from "lucide-react";
-import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useUser, useCollection, useFirestore, useMemoFirebase, publicFirestore } from "@/firebase";
+import { collection, query, orderBy, serverTimestamp, addDoc, Firestore } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -31,26 +31,35 @@ type BlogPost = {
 }
 
 const BlogPage = () => {
-  const { isAdmin } = useUser();
-  const firestore = useFirestore();
-  const { toast } = useToast();
+  const { user, isAdmin, isUserLoading } = useUser();
+  const loggedInFirestore = useFirestore(); // This can throw if user is not logged in
   const router = useRouter();
+  const { toast } = useToast();
+
   const [isImporting, setIsImporting] = useState(false);
   const [importHtml, setImportHtml] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
+  // Choose the correct firestore instance.
+  // When the user is not logged in, `useFirestore()` would throw an error.
+  // We check `user` from `useUser()` which is safe for logged-out states.
+  const firestore = user ? loggedInFirestore : publicFirestore;
+  
   const postsQuery = useMemoFirebase(() => {
+    // Firestore will be null initially if logged out, so we wait.
     if (!firestore) return null;
     return query(collection(firestore, 'blogPosts'), orderBy('date', 'desc'));
   }, [firestore]);
 
-  const { data: blogPosts, isLoading } = useCollection<BlogPost>(postsQuery);
+  // isUserLoading is used to wait for auth state before deciding which firestore instance to use.
+  const { data: blogPosts, isLoading: isPostsLoading } = useCollection<BlogPost>(postsQuery);
 
   const handleImport = async () => {
-    if (!importHtml || !firestore) {
+    // Import requires an authenticated admin, so we must use loggedInFirestore
+    if (!importHtml || !loggedInFirestore) {
         toast({
             variant: "destructive",
-            title: "HTML is missing",
+            title: "HTML is missing or you are not logged in.",
             description: "Please paste the article's HTML content to import.",
         });
         return;
@@ -80,7 +89,7 @@ const BlogPage = () => {
             }
         };
 
-        const postsCollection = collection(firestore, 'blogPosts');
+        const postsCollection = collection(loggedInFirestore, 'blogPosts');
         await addDoc(postsCollection, newPost);
 
         toast({
@@ -89,7 +98,6 @@ const BlogPage = () => {
         });
         setIsDialogOpen(false);
         setImportHtml('');
-        // No need to manually refetch, useCollection will update automatically
     } catch (error) {
         console.error("Import error:", error);
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
@@ -103,6 +111,7 @@ const BlogPage = () => {
     }
   };
 
+  const isLoading = isUserLoading || isPostsLoading;
 
   return (
     <div className="container max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
