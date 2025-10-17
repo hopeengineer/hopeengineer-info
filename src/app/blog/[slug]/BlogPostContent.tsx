@@ -1,3 +1,4 @@
+
 'use client';
 
 import { notFound, useParams, useRouter } from "next/navigation";
@@ -20,7 +21,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
-import { useMemo } from "react";
 
 type BlogPost = {
     id: string;
@@ -42,10 +42,10 @@ export default function BlogPostContent() {
   const slug = params.slug as string;
 
   const { toast } = useToast();
-  const { user, isAdmin, isUserLoading } = useUser();
+  // We get isAdmin here, but we will not use isUserLoading for the main loading state
+  const { user, isAdmin } = useUser();
   
   // ALWAYS use the public firestore instance for viewing posts.
-  // Admin actions will be guarded by the `isAdmin` check.
   const firestore: Firestore = publicFirestore;
 
   // The query will be null until `slug` is available.
@@ -54,23 +54,23 @@ export default function BlogPostContent() {
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
   
+  // The loading state `isPostsLoading` is now the primary indicator.
   const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
   
-  // This is the combined, robust loading state.
-  const isLoading = isUserLoading || (!!postQuery && isPostsLoading);
+  // This is the simplified, robust loading state. It's only true if the query is valid and we are fetching.
+  const isLoading = !!postQuery && isPostsLoading;
   
   // Condition for not found: query is valid, loading is finished, and we still have no post.
   const isNotFound = !isLoading && !!postQuery && !post;
   
   const handleClearAllPosts = async () => {
-    if (!user) {
+    // This action still requires an authenticated admin.
+    const { firestore: adminFirestore } = useUser();
+    if (!user || !adminFirestore) {
         toast({variant: "destructive", title: "You must be logged in as an admin."});
         return;
     }
-    // This action requires an authenticated firestore instance, which we get from `useUser`
-    const { firestore: adminFirestore } = useUser();
-    if (!adminFirestore) return;
 
     toast({ title: "Clearing all posts..."});
     const allPostsQuery = collection(adminFirestore, 'blogPosts');
@@ -84,7 +84,7 @@ export default function BlogPostContent() {
     router.push("/blog");
   }
 
-  // Loading skeleton state. Show while user is loading OR while posts are loading with a valid query.
+  // Show a skeleton if the query isn't ready yet, or if we are actively loading.
   if (isLoading || !postQuery) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -104,6 +104,7 @@ export default function BlogPostContent() {
   }
   
   if (isNotFound) {
+      // The admin-only "Clear Posts" tool is a fallback for data issues.
       if (isAdmin) {
         return (
           <div className="container text-center py-20">
@@ -117,7 +118,7 @@ export default function BlogPostContent() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently delete ALL posts from the database. This is a temporary tool to fix the import issue.
+                      This will permanently delete ALL posts from the database. This is a temporary tool to fix import issues.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -129,13 +130,13 @@ export default function BlogPostContent() {
           </div>
         )
       }
+      // For regular users, trigger the standard Next.js 404 page.
       notFound();
       return null;
   }
   
+  // This state should ideally not be reached if the above logic is correct, but as a fallback, show a skeleton.
   if (!post) {
-      // This state is temporary while loading, so we show a skeleton.
-      // The `isNotFound` block above will handle the permanent not found case.
       return (
         <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <header className="mb-8 text-center">
@@ -153,9 +154,8 @@ export default function BlogPostContent() {
       );
   }
 
-
   const handleDelete = () => {
-    // This action requires an authenticated firestore instance
+    // This action requires an authenticated admin firestore instance
     const { firestore: adminFirestore } = useUser();
     if (adminFirestore && post) {
       const postRef = doc(adminFirestore, 'blogPosts', post.id);
