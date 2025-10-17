@@ -37,12 +37,15 @@ const articleParserPrompt = ai.definePrompt({
     input: { schema: z.object({ articleHtml: z.string() }) },
     output: { schema: ArticleDataSchema },
     prompt: `You are an expert web content parser. You will be given the HTML content of a blog post.
-    Your task is to extract the following information and clean it up:
-    1.  The main title of the article.
-    2.  A concise one or two-sentence summary to be used as a description.
-    3.  The author's name.
-    4.  The URL of the main feature image for the article. If no prominent image is found, generate a random placeholder image URL from 'https://picsum.photos/seed/RANDOM_SEED/1200/675'.
-    5.  The full inner HTML of the main article content. This is critical: you must remove all unrelated content like navigation bars, sidebars, advertisements, social media sharing buttons, "related posts" sections, and footers. The output should be only the core article text, headings, and images.
+    Your task is to extract the following information:
+    1.  **Title**: The main title of the article.
+    2.  **Description**: A concise one or two-sentence summary of the article.
+    3.  **Author**: The name of the article's author.
+    4.  **Image URL**: The URL of the main feature image. If no prominent image is found, use a random placeholder URL from 'https://picsum.photos/seed/RANDOM_SEED/1200/675'.
+    5.  **Content**: The complete, full, and unabridged inner HTML of the main article body.
+        - **CRITICAL**: You must remove all unrelated content like navigation bars, sidebars, author bios, advertisements, social media sharing buttons, "related posts" sections, and footers.
+        - **CRITICAL**: The content MUST NOT include the main title or the main hero image, as those are already extracted into separate fields.
+        - **CRITICAL**: Return the ENTIRE article content, not just the first few paragraphs.
 
     Analyze the provided HTML and return the data in the specified JSON format.
 
