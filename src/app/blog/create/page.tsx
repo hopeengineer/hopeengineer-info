@@ -87,7 +87,8 @@ export default function CreateBlogPostPage() {
       };
 
       const postsCollection = collection(firestore, 'blogPosts');
-      addDocumentNonBlocking(postsCollection, newPost);
+      // Await the promise to ensure the document is created before proceeding
+      await addDocumentNonBlocking(postsCollection, newPost);
 
       toast({
         title: 'Post Created!',
@@ -99,7 +100,7 @@ export default function CreateBlogPostPage() {
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: 'Could not create the post.',
+        description: 'Could not create the post. Please try again.',
       });
     } finally {
         setIsSubmitting(false);
