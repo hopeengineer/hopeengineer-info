@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { serverTimestamp } from 'firebase/firestore';
-import { getFirebaseAdminSdks } from '@/firebase/server';
+import { adminDb } from '@/firebase/server'; // Correctly import the server-side admin DB
 import { parse } from 'node-html-parser';
 import { format } from 'date-fns';
 
@@ -20,8 +20,8 @@ export type ImportArticleInput = z.infer<typeof ImportArticleInputSchema>;
 
 // This is the main function that will be called from the client
 export async function importArticle(input: ImportArticleInput): Promise<void> {
-  // Pass the API key from the server environment into the flow.
-  await importArticleFlow({ ...input, apiKey: process.env.GEMINI_API_KEY });
+  // The API key is now handled by Genkit's configuration.
+  await importArticleFlow(input);
 }
 
 // Define the schema for the output of our parsing prompt
@@ -52,18 +52,13 @@ const articleParserPrompt = ai.definePrompt({
     `,
 });
 
-// Extend the input schema for the flow to include the API key
-const FlowInputSchema = ImportArticleInputSchema.extend({
-    apiKey: z.string().optional(),
-});
-
 const importArticleFlow = ai.defineFlow(
   {
     name: 'importArticleFlow',
-    inputSchema: FlowInputSchema,
+    inputSchema: ImportArticleInputSchema,
     outputSchema: z.void(),
   },
-  async ({ url, apiKey }) => {
+  async ({ url }) => {
     // 1. Fetch the article content
     const response = await fetch(url);
     if (!response.ok) {
@@ -80,20 +75,13 @@ const importArticleFlow = ai.defineFlow(
     }
 
     // 3. Use the LLM to extract structured data from the messy HTML
-    // Pass the API key directly to the prompt call
-    const { output } = await articleParserPrompt(
-        { articleHtml: articleBody },
-        { auth: apiKey }
-    );
+    const { output } = await articleParserPrompt({ articleHtml: articleBody });
     
     if (!output) {
         throw new Error('AI parsing failed to return data.');
     }
     
-    // 4. Connect to Firebase and save the new post
-    // We initialize the SDKs here because this is a server-side flow.
-    const { firestore } = getFirebaseAdminSdks(); 
-
+    // 4. Connect to Firebase and save the new post using the admin SDK
     const slug = output.title
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
@@ -115,7 +103,8 @@ const importArticleFlow = ai.defineFlow(
         }
     };
 
-    const postsCollection = firestore.collection('blogPosts');
+    // Use the correctly initialized adminDb
+    const postsCollection = adminDb.collection('blogPosts');
     await postsCollection.add(newPost);
   }
 );
