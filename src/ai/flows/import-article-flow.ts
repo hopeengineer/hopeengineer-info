@@ -8,8 +8,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { getSdks } from '@/firebase';
+import { serverTimestamp } from 'firebase/firestore';
+import { getFirebaseAdminSdks } from '@/firebase/server';
 import { parse } from 'node-html-parser';
 import { format } from 'date-fns';
 
@@ -92,7 +92,7 @@ const importArticleFlow = ai.defineFlow(
     
     // 4. Connect to Firebase and save the new post
     // We initialize the SDKs here because this is a server-side flow.
-    const { firestore } = getSdks(); 
+    const { firestore } = getFirebaseAdminSdks(); 
 
     const slug = output.title
         .toLowerCase()
@@ -115,7 +115,7 @@ const importArticleFlow = ai.defineFlow(
         }
     };
 
-    const postsCollection = collection(firestore, 'blogPosts');
-    await addDoc(postsCollection, newPost);
+    const postsCollection = firestore.collection('blogPosts');
+    await postsCollection.add(newPost);
   }
 );
