@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound, useRouter } from "next/navigation";
+import { notFound, useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { useCollection, useFirestore, useUser, useMemoFirebase, publicFirestore } from "@/firebase";
 import { doc, query, collection, where, limit, getDocs, writeBatch } from "firebase/firestore";
@@ -20,13 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
-import { use, useParams } from "react";
-
-type BlogPostPageProps = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
+import { use, useEffect, useState } from "react";
 
 type BlogPost = {
     id: string;
@@ -42,28 +36,27 @@ type BlogPost = {
     content: string;
 }
 
-function BlogPostContent({ slug }: { slug: string }) {
+export default function BlogPostPage() {
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
+
   const { toast } = useToast();
   const { user, isAdmin, isUserLoading } = useUser();
-  const loggedInFirestore = useFirestore(); // This can throw if user is not logged in
+  const loggedInFirestore = useFirestore();
 
-  // Choose the correct firestore instance.
-  // When the user is not logged in, `useFirestore()` would throw an error.
-  // We check `user` from `useUser()` which is safe for logged-out states.
   const firestore = user ? loggedInFirestore : publicFirestore;
 
   const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
-  
+
   const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
   const isLoading = isUserLoading || (!!postQuery && isPostsLoading);
   
-  // Condition for not found: query is valid, loading is finished, and we still have no post.
   const isNotFound = !isLoading && !!postQuery && !post;
 
   const handleClearAllPosts = async () => {
@@ -125,10 +118,9 @@ function BlogPostContent({ slug }: { slug: string }) {
       )
     }
     notFound();
-    return null; // notFound() throws an error, but this makes it explicit.
+    return null;
   }
-
-  // This check is now safe because it only runs after loading is complete and we know 'post' exists.
+  
   if (!post) {
     return null; 
   }
@@ -204,10 +196,4 @@ function BlogPostContent({ slug }: { slug: string }) {
       )}
     </article>
   );
-}
-
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const resolvedParams = use(params);
-  const { slug } = resolvedParams;
-  return <BlogPostContent slug={slug} />;
 }
