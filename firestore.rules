@@ -1,0 +1,60 @@
+/**
+ * @fileoverview Firestore Security Rules for HopeEngineer Hub.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model, where each user can only access their own data.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, ensuring clear ownership and simplified rules.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed for privacy.
+ * - Write access is strictly limited to the owning user.
+ *
+ * Denormalization for Authorization:
+ * - The User document's `id` field MUST match the `userId` path parameter to enforce ownership.
+ *   This avoids needing to query for user information and simplifies the rules.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces strict user ownership for the /users/{userId} path.
+     * Only the authenticated user matching the {userId} can read or write their own profile.
+     * @path /users/{userId}
+     * @allow (create) - User with UID 'user_abc' can create their profile at /users/user_abc if the id field matches.
+     * @allow (get) - User with UID 'user_abc' can get their profile at /users/user_abc.
+     * @allow (update) - User with UID 'user_abc' can update their profile at /users/user_abc.
+     * @allow (delete) - User with UID 'user_abc' can delete their profile at /users/user_abc.
+     * @deny (create) - User with UID 'user_def' cannot create a profile at /users/user_abc.
+     * @deny (get) - User with UID 'user_def' cannot get the profile at /users/user_abc.
+     * @deny (update) - User with UID 'user_def' cannot update the profile at /users/user_abc.
+     * @deny (delete) - User with UID 'user_def' cannot delete the profile at /users/user_abc.
+     * @principle Enforces document ownership for all operations. Validates user ID on create and enforces immutability on update.
+     */
+    match /users/{userId} {
+      // Helpers
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return isSignedIn() && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+          return isOwner(userId) && resource != null;
+      }
+
+      // Read Permissions
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      // Write Permissions
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
