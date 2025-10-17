@@ -20,7 +20,8 @@ export type ImportArticleInput = z.infer<typeof ImportArticleInputSchema>;
 
 // This is the main function that will be called from the client
 export async function importArticle(input: ImportArticleInput): Promise<void> {
-  await importArticleFlow(input);
+  // Pass the API key from the server environment into the flow.
+  await importArticleFlow({ ...input, apiKey: process.env.GEMINI_API_KEY });
 }
 
 // Define the schema for the output of our parsing prompt
@@ -51,14 +52,18 @@ const articleParserPrompt = ai.definePrompt({
     `,
 });
 
+// Extend the input schema for the flow to include the API key
+const FlowInputSchema = ImportArticleInputSchema.extend({
+    apiKey: z.string().optional(),
+});
 
 const importArticleFlow = ai.defineFlow(
   {
     name: 'importArticleFlow',
-    inputSchema: ImportArticleInputSchema,
+    inputSchema: FlowInputSchema,
     outputSchema: z.void(),
   },
-  async ({ url }) => {
+  async ({ url, apiKey }) => {
     // 1. Fetch the article content
     const response = await fetch(url);
     if (!response.ok) {
@@ -75,7 +80,11 @@ const importArticleFlow = ai.defineFlow(
     }
 
     // 3. Use the LLM to extract structured data from the messy HTML
-    const { output } = await articleParserPrompt({ articleHtml: articleBody });
+    // Pass the API key directly to the prompt call
+    const { output } = await articleParserPrompt(
+        { articleHtml: articleBody },
+        { auth: apiKey }
+    );
     
     if (!output) {
         throw new Error('AI parsing failed to return data.');
