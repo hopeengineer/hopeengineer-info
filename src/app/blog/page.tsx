@@ -51,13 +51,13 @@ const BlogPage = () => {
     const batch = writeBatch(firestore);
     const postsCollection = collection(firestore, "blogPosts");
     
-    // For the purpose of the error, we can just capture the last post.
     let lastPostForError: any = null;
 
     hardcodedBlogPosts.forEach(post => {
-      const docRef = doc(postsCollection, post.slug);
+      // Let firestore generate the document ID
+      const docRef = doc(postsCollection); 
       const postData = { ...post };
-      lastPostForError = postData; // Keep track of data being written
+      lastPostForError = postData; 
       batch.set(docRef, postData);
     });
 
@@ -69,19 +69,14 @@ const BlogPage = () => {
         });
       })
       .catch((serverError) => {
-        // Create a contextual error for the batch write operation.
-        // NOTE: A batch write is treated as a single 'write' operation in security rules.
-        // We'll use the collection path and the data of one of the posts for context.
         const contextualError = new FirestorePermissionError({
           path: postsCollection.path,
           operation: 'write',
-          requestResourceData: lastPostForError, // Provide an example of the data
+          requestResourceData: lastPostForError,
         });
 
-        // Emit the error for the global listener to catch and display.
         errorEmitter.emit('permission-error', contextualError);
         
-        // Also show a generic toast to the user.
         toast({
             variant: "destructive",
             title: "Import Failed",

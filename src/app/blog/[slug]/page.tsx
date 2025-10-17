@@ -3,7 +3,7 @@
 import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { doc, query, collection, where, limit } from "firebase/firestore";
+import { doc, query, collection, where, limit, getDocs, writeBatch } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,6 +55,35 @@ function BlogPostContent({ slug }: { slug: string }) {
   const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
+  const handleDelete = () => {
+    if (firestore && post) {
+      const postRef = doc(firestore, 'blogPosts', post.id);
+      deleteDocumentNonBlocking(postRef);
+      toast({
+        title: "Post deleted",
+        description: `"${post.title}" has been successfully deleted.`,
+      });
+      router.push("/blog");
+    }
+  };
+
+  // TEMPORARY: This function will clear the entire collection to fix bad data.
+  const handleClearCollection = async () => {
+    if (!firestore) return;
+    const postsCollection = collection(firestore, 'blogPosts');
+    const postsSnapshot = await getDocs(postsCollection);
+    const batch = writeBatch(firestore);
+    postsSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+    toast({
+      title: "Database Cleared",
+      description: "Incorrectly formatted posts have been deleted. Please re-import.",
+    });
+    router.push("/blog");
+  }
+
   if (isLoading) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -74,25 +103,36 @@ function BlogPostContent({ slug }: { slug: string }) {
   }
 
   if (!isLoading && !post) {
+    // This is the temporary cleanup mechanism.
+    if(isAdmin) {
+      return (
+        <div className="container text-center py-20">
+          <h1 className="text-3xl font-bold">Post Not Found (or Data is Incorrect)</h1>
+          <p className="text-muted-foreground mt-4">This may be due to incorrectly formatted data in your database.</p>
+          <p className="mb-6">As an admin, you can clear all posts and re-import them.</p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Clear All Blog Posts</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action will permanently delete all posts from your Firestore database.
+                  You should then go back to the blog page and click "Import Posts" again.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClearCollection}>Yes, delete everything</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )
+    }
     notFound();
   }
-
-  // We can only reach this point if isLoading is false and post exists.
-  // So we can safely assert that post is not null.
-  if (!post) return null;
-
-  const handleDelete = () => {
-    if (firestore && post) {
-      // Since we are querying by slug, the 'id' in the post object is the document ID.
-      const postRef = doc(firestore, 'blogPosts', post.id);
-      deleteDocumentNonBlocking(postRef);
-      toast({
-        title: "Post deleted",
-        description: `"${post.title}" has been successfully deleted.`,
-      });
-      router.push("/blog");
-    }
-  };
 
   return (
     <article className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
