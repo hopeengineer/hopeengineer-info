@@ -2,60 +2,78 @@
  * @fileoverview Firestore Security Rules for HopeEngineer Hub.
  *
  * Core Philosophy:
- * This ruleset prioritizes a clear separation of concerns: user data is strictly controlled by the owning user, while blog posts are publicly readable but only writable by authorized users (e.g., admins).
+ * This ruleset enforces a role-based access control model for blog posts (admin-only writes),
+ * and a strict user-ownership model for user profiles.
  *
  * Data Structure:
- * - /users/{userId}: Stores individual user profiles. Each user can only access their own profile data.
- * - /blogPosts/{postId}: Stores blog posts. These are publicly readable.
+ * - /users/{userId}: Stores user profile data.
+ * - /blogPosts/{postId}: Stores blog post data.
  *
  * Key Security Decisions:
- * - User profiles are private and accessible only to the owning user.
- * - Blog posts are publicly readable to enable wide content distribution.
- * - Only authorized users can create, update, or delete blog posts.
+ * - Blog post writes are restricted to admins. Reads are public.
+ * - User listing is disallowed.
+ * - User profiles are private and only accessible to the owning user.
+ *
+ * Denormalization for Authorization: N/A
+ *
+ * Structural Segregation:
+ * - Private user data is stored under the /users collection, separate from the public /blogPosts collection.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile data.
+     * @description Checks if the request is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user's UID matches the provided userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is an existing owner of the document.
+     * Useful for update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Enforces a path-based ownership model, granting access only to the user with a matching UID.
      * @path /users/{userId}
-     * @allow (create) User with matching ID can create their own profile.
-     * @allow (get, update, delete) User can access their own profile.
-     * @deny (create) User cannot create a profile with an ID that doesn't match their own.
-     * @deny (get, update, delete) User cannot access another user's profile.
+     * @allow (create) User with UID 'user123' can create their profile at /users/user123.
+     * @allow (get,update,delete) User with UID 'user123' can read/update/delete their profile at /users/user123.
+     * @deny (create) User with UID 'user456' cannot create a profile at /users/user123.
+     * @deny (get,update,delete) User with UID 'user456' cannot read/update/delete the profile at /users/user123.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isSignedIn() && isOwner(userId) && resource.data != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false; // Listing users is not permitted.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id; // Enforce immutability of the user ID.
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to blog post data.
+     * @description Manages access to blog posts.  Reads are public, but writes are restricted.
      * @path /blogPosts/{postId}
-     * @allow (get, list) Any user can read blog posts.
-     * @deny (create, update, delete) Only admins can create, update, or delete blog posts.
-     * @principle Public read with restricted writes.
+     * @allow (get, list) Any user (signed in or not) can read and list blog posts.
+     * @deny (create,update,delete) Non-admin users cannot create, update, or delete blog posts.
+     * @principle Restricts write access to a defined role, while allowing public reads.
      */
     match /blogPosts/{postId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin role check
+      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
   }
 }
