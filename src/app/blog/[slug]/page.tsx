@@ -1,7 +1,24 @@
-import { notFound } from "next/navigation";
+'use client';
+
+import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
-import { blogPosts } from "@/lib/data";
-import { Badge } from "@/components/ui/badge";
+import { useDoc, useFirestore, useUser } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { Button } from "@/components/ui/button";
+import { deleteDocumentNonBlocking } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 type BlogPostPageProps = {
   params: {
@@ -9,19 +26,61 @@ type BlogPostPageProps = {
   };
 };
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({
-    slug: post.slug,
-  }));
+type BlogPost = {
+    slug: string;
+    title: string;
+    description: string;
+    date: string;
+    author: string;
+    image: {
+      imageUrl: string;
+      imageHint: string;
+    };
+    content: string;
 }
 
 export default function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = params;
-  const post = blogPosts.find((p) => p.slug === slug);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { isAdmin } = useUser();
+  const firestore = useFirestore();
+
+  const postRef = firestore ? doc(firestore, "blogPosts", slug) : null;
+  const { data: post, isLoading } = useDoc<BlogPost>(postRef);
+
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <header className="mb-8 text-center">
+            <Skeleton className="h-12 w-3/4 mx-auto" />
+            <Skeleton className="h-6 w-1/2 mx-auto mt-4" />
+            <Skeleton className="h-4 w-1/3 mx-auto mt-6" />
+        </header>
+        <Skeleton className="w-full aspect-video rounded-lg" />
+        <div className="mt-8 space-y-4">
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-6 w-5/6" />
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     notFound();
   }
+
+  const handleDelete = () => {
+    if (postRef) {
+      deleteDocumentNonBlocking(postRef);
+      toast({
+        title: "Post deleted",
+        description: `"${post.title}" has been successfully deleted.`,
+      });
+      router.push("/blog");
+    }
+  };
 
   return (
     <article className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -55,12 +114,29 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
       
-      {/* Admin controls for demonstration */}
-      <div className="mt-12 flex justify-end gap-4 border-t pt-8">
-        <button className="text-sm text-muted-foreground hover:text-foreground">Edit</button>
-        <button className="text-sm text-destructive/80 hover:text-destructive">Delete</button>
-      </div>
-
+      {isAdmin && (
+         <div className="mt-12 flex justify-end gap-4 border-t pt-8">
+            <Button variant="outline" disabled>Edit</Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the blog post
+                    "{post.title}".
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+         </div>
+      )}
     </article>
   );
 }
