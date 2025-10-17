@@ -50,7 +50,7 @@ const AnimatedHero = () => {
       <div className="container px-4 md:px-6 z-10">
         <div className="grid gap-6 lg:gap-8">
           <div className="space-y-4">
-            <h1 className="text-4xl font-headline font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none text-primary-foreground">
+            <h1 className="text-4xl font-headline font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none text-foreground">
               Engineer Your Hope,
               <br />
               Build Your Future.
