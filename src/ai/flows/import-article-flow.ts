@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { serverTimestamp } from 'firebase/firestore';
-import { adminDb } from '@/firebase/server'; // Correctly import the server-side admin DB
+import { adminDb } from '@/firebase/server';
 import { parse } from 'node-html-parser';
 import { format } from 'date-fns';
 
