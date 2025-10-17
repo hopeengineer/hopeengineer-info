@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc, query, collection, where, limit, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,13 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { useStorage } from '@/firebase/provider';
 
 const editPostSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   description: z.string().min(1, 'Description is required.'),
   content: z.string().min(1, 'Content is required.'),
-  image: z.instanceof(File).optional(),
+  imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
 });
 
 type EditPostForm = z.infer<typeof editPostSchema>;
@@ -46,7 +44,6 @@ export default function EditBlogPostPage() {
   const { toast } = useToast();
   const { user, isAdmin, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const storage = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const postQuery = useMemoFirebase(() => {
@@ -63,6 +60,7 @@ export default function EditBlogPostPage() {
       title: '',
       description: '',
       content: '',
+      imageUrl: '',
     },
   });
 
@@ -72,6 +70,7 @@ export default function EditBlogPostPage() {
         title: post.title,
         description: post.description,
         content: post.content,
+        imageUrl: post.image?.imageUrl || '',
       });
     }
   }, [post, form]);
@@ -84,21 +83,10 @@ export default function EditBlogPostPage() {
   }, [isUserLoading, isAdmin, router, slug, toast]);
 
   const onSubmit = async (data: EditPostForm) => {
-    if (!firestore || !post || !storage) return;
+    if (!firestore || !post) return;
     setIsSubmitting(true);
 
     try {
-        let imageUrl = post.image?.imageUrl;
-        let imageHint = post.image?.imageHint;
-
-        if (data.image) {
-            const imageFile = data.image;
-            const storageRef = ref(storage, `blog-images/${Date.now()}_${imageFile.name}`);
-            const uploadResult = await uploadBytes(storageRef, imageFile);
-            imageUrl = await getDownloadURL(uploadResult.ref);
-            imageHint = 'custom upload';
-        }
-
         const postRef = doc(firestore, 'blogPosts', post.id);
         const updatedData = {
             title: data.title,
@@ -106,8 +94,8 @@ export default function EditBlogPostPage() {
             content: data.content,
             updatedAt: serverTimestamp(),
             image: {
-                imageUrl,
-                imageHint,
+                imageUrl: data.imageUrl || post.image?.imageUrl,
+                imageHint: data.imageUrl ? 'custom url' : post.image?.imageHint,
             }
         };
 
@@ -194,10 +182,10 @@ export default function EditBlogPostPage() {
               />
               <FormField
                 control={form.control}
-                name="image"
-                render={({ field: { onChange, value, ...rest }}) => (
+                name="imageUrl"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Featured Image</FormLabel>
+                    <FormLabel>Featured Image URL</FormLabel>
                      {post?.image && (
                         <div className="mb-4">
                             <p className="text-sm text-muted-foreground">Current Image:</p>
@@ -206,16 +194,11 @@ export default function EditBlogPostPage() {
                      )}
                     <FormControl>
                       <Input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            onChange(file);
-                        }}
-                        {...rest}
+                        placeholder="https://example.com/your-image.jpg"
+                        {...field}
                       />
                     </FormControl>
-                    <FormDescription>Upload a new image to replace the current one.</FormDescription>
+                    <FormDescription>Enter a new URL to replace the current image.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

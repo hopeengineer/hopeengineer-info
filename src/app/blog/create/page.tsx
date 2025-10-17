@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useFirestore, useUser, useStorage } from '@/firebase';
 import { collection, serverTimestamp, addDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,7 +19,7 @@ const createPostSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   description: z.string().min(1, 'Description is required.'),
   content: z.string().min(1, 'Content is required.'),
-  image: z.instanceof(File).optional(),
+  imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
 });
 
 type CreatePostForm = z.infer<typeof createPostSchema>;
@@ -30,7 +29,6 @@ export default function CreateBlogPostPage() {
   const { toast } = useToast();
   const { user, isAdmin, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const storage = useStorage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreatePostForm>({
@@ -39,6 +37,7 @@ export default function CreateBlogPostPage() {
       title: '',
       description: '',
       content: '',
+      imageUrl: '',
     },
   });
 
@@ -50,21 +49,10 @@ export default function CreateBlogPostPage() {
   }, [isUserLoading, isAdmin, router, toast]);
 
   const onSubmit = async (data: CreatePostForm) => {
-    if (!firestore || !storage) return;
+    if (!firestore) return;
     setIsSubmitting(true);
 
     try {
-      let imageUrl = 'https://picsum.photos/seed/placeholder/600/400';
-      let imageHint = 'abstract placeholder';
-
-      if (data.image) {
-        const imageFile = data.image;
-        const storageRef = ref(storage, `blog-images/${Date.now()}_${imageFile.name}`);
-        const uploadResult = await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(uploadResult.ref);
-        imageHint = 'custom upload';
-      }
-
       const slug = data.title
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
@@ -81,13 +69,13 @@ export default function CreateBlogPostPage() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         image: {
-            imageUrl,
-            imageHint,
+            imageUrl: data.imageUrl || 'https://picsum.photos/seed/placeholder/600/400',
+            imageHint: data.imageUrl ? 'custom url' : 'abstract placeholder',
         }
       };
 
       const postsCollection = collection(firestore, 'blogPosts');
-      await addDoc(postsCollection, newPost);
+      const docRef = await addDoc(postsCollection, newPost);
 
       toast({
         title: 'Post Created!',
@@ -152,22 +140,14 @@ export default function CreateBlogPostPage() {
               />
                <FormField
                 control={form.control}
-                name="image"
-                render={({ field: { onChange, value, ...rest }}) => (
+                name="imageUrl"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Featured Image</FormLabel>
+                    <FormLabel>Featured Image URL</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            onChange(file);
-                        }}
-                        {...rest}
-                      />
+                      <Input placeholder="https://example.com/your-image.jpg" {...field} />
                     </FormControl>
-                    <FormDescription>Upload an image for your blog post.</FormDescription>
+                    <FormDescription>Paste the URL of an image for your blog post.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
