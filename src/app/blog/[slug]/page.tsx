@@ -41,8 +41,7 @@ type BlogPost = {
     content: string;
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = use(params);
+function BlogPostContent({ slug }: { slug: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const { isAdmin } = useUser();
@@ -147,4 +146,9 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       )}
     </article>
   );
+}
+
+export default function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = use(params);
+  return <BlogPostContent slug={slug} />;
 }
