@@ -99,7 +99,7 @@ export default function EditBlogPostPage() {
             }
         };
 
-        updateDoc(postRef, updatedData);
+        await updateDoc(postRef, updatedData);
 
         toast({
         title: 'Post Updated!',
@@ -139,10 +139,17 @@ export default function EditBlogPostPage() {
         </div>
     );
   }
-
-  if (!post) {
+  
+  // Only call notFound if loading is complete and there's still no post.
+  if (!isLoading && !post) {
     notFound();
   }
+
+  // This check is now safe because it only runs after loading is complete and post is confirmed to exist.
+  if (!post) {
+      return null;
+  }
+
 
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
