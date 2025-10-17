@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
-import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
-import { doc, query, collection, where, limit } from 'firebase/firestore';
+import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking, useStorage } from '@/firebase';
+import { doc, query, collection, where, limit, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +20,7 @@ const editPostSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   description: z.string().min(1, 'Description is required.'),
   content: z.string().min(1, 'Content is required.'),
+  image: z.instanceof(File).optional(),
 });
 
 type EditPostForm = z.infer<typeof editPostSchema>;
@@ -29,6 +31,10 @@ type BlogPost = {
   title: string;
   description: string;
   content: string;
+  image: {
+    imageUrl: string;
+    imageHint: string;
+  };
 };
 
 export default function EditBlogPostPage() {
@@ -39,6 +45,8 @@ export default function EditBlogPostPage() {
   const { toast } = useToast();
   const { user, isAdmin, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const storage = useStorage();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
@@ -74,18 +82,52 @@ export default function EditBlogPostPage() {
     }
   }, [isUserLoading, isAdmin, router, slug, toast]);
 
+  const onSubmit = async (data: EditPostForm) => {
+    if (!firestore || !post || !storage) return;
+    setIsSubmitting(true);
 
-  const onSubmit = (data: EditPostForm) => {
-    if (!firestore || !post) return;
+    try {
+        let imageUrl = post.image?.imageUrl;
+        let imageHint = post.image?.imageHint;
 
-    const postRef = doc(firestore, 'blogPosts', post.id);
-    updateDocumentNonBlocking(postRef, data);
+        if (data.image) {
+            const imageFile = data.image;
+            const storageRef = ref(storage, `blog-images/${Date.now()}_${imageFile.name}`);
+            const uploadResult = await uploadBytes(storageRef, imageFile);
+            imageUrl = await getDownloadURL(uploadResult.ref);
+            imageHint = 'custom upload';
+        }
 
-    toast({
-      title: 'Post Updated!',
-      description: 'Your changes have been saved successfully.',
-    });
-    router.push(`/blog/${slug}`);
+        const postRef = doc(firestore, 'blogPosts', post.id);
+        const updatedData = {
+            title: data.title,
+            description: data.description,
+            content: data.content,
+            updatedAt: serverTimestamp(),
+            image: {
+                imageUrl,
+                imageHint,
+            }
+        };
+
+        updateDocumentNonBlocking(postRef, updatedData);
+
+        toast({
+        title: 'Post Updated!',
+        description: 'Your changes have been saved successfully.',
+        });
+        router.push(`/blog/${slug}`);
+        
+    } catch (error) {
+        console.error("Error updating post:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: 'Could not update the post.',
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
   
   const isLoading = isUserLoading || isPostLoading;
@@ -151,6 +193,34 @@ export default function EditBlogPostPage() {
               />
               <FormField
                 control={form.control}
+                name="image"
+                render={({ field: { onChange, value, ...rest }}) => (
+                  <FormItem>
+                    <FormLabel>Featured Image</FormLabel>
+                     {post?.image && (
+                        <div className="mb-4">
+                            <p className="text-sm text-muted-foreground">Current Image:</p>
+                            <img src={post.image.imageUrl} alt="Current featured image" className="w-48 h-auto rounded-md border" />
+                        </div>
+                     )}
+                    <FormControl>
+                      <Input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            onChange(file);
+                        }}
+                        {...rest}
+                      />
+                    </FormControl>
+                    <FormDescription>Upload a new image to replace the current one.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="content"
                 render={({ field }) => (
                   <FormItem>
@@ -163,8 +233,8 @@ export default function EditBlogPostPage() {
                 )}
               />
               <div className="flex gap-2">
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button variant="outline" type="button" onClick={() => router.back()}>
                     Cancel

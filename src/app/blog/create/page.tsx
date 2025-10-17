@@ -1,25 +1,26 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, addDocumentNonBlocking, useStorage } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 
 const createPostSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   description: z.string().min(1, 'Description is required.'),
   content: z.string().min(1, 'Content is required.'),
+  image: z.instanceof(File).optional(),
 });
 
 type CreatePostForm = z.infer<typeof createPostSchema>;
@@ -29,6 +30,8 @@ export default function CreateBlogPostPage() {
   const { toast } = useToast();
   const { user, isAdmin, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const storage = useStorage();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreatePostForm>({
     resolver: zodResolver(createPostSchema),
@@ -46,31 +49,61 @@ export default function CreateBlogPostPage() {
     }
   }, [isUserLoading, isAdmin, router, toast]);
 
-  const onSubmit = (data: CreatePostForm) => {
-    if (!firestore) return;
+  const onSubmit = async (data: CreatePostForm) => {
+    if (!firestore || !storage) return;
+    setIsSubmitting(true);
 
-    const slug = data.title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/[\s-]+/g, '-');
+    try {
+      let imageUrl = 'https://picsum.photos/seed/placeholder/600/400';
+      let imageHint = 'abstract placeholder';
 
-    const newPost = {
-      ...data,
-      slug,
-      author: 'HopeEngineer',
-      date: format(new Date(), 'MMMM d, yyyy'),
-      image: PlaceHolderImages.find(p => p.id === 'blog-4') || PlaceHolderImages[0],
-    };
+      if (data.image) {
+        const imageFile = data.image;
+        const storageRef = ref(storage, `blog-images/${Date.now()}_${imageFile.name}`);
+        const uploadResult = await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+        imageHint = 'custom upload';
+      }
 
-    const postsCollection = collection(firestore, 'blogPosts');
-    addDocumentNonBlocking(postsCollection, newPost);
+      const slug = data.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/[\s-]+/g, '-');
 
-    toast({
-      title: 'Post Created!',
-      description: 'Your new post has been saved.',
-    });
-    router.push(`/blog/${slug}`);
+      const newPost = {
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        slug,
+        author: 'HopeEngineer',
+        date: format(new Date(), 'MMMM d, yyyy'),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        image: {
+            imageUrl,
+            imageHint,
+        }
+      };
+
+      const postsCollection = collection(firestore, 'blogPosts');
+      addDocumentNonBlocking(postsCollection, newPost);
+
+      toast({
+        title: 'Post Created!',
+        description: 'Your new post has been saved.',
+      });
+      router.push(`/blog/${slug}`);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'Could not create the post.',
+      });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   if (isUserLoading || !isAdmin) {
@@ -117,6 +150,28 @@ export default function CreateBlogPostPage() {
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="image"
+                render={({ field: { onChange, value, ...rest }}) => (
+                  <FormItem>
+                    <FormLabel>Featured Image</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            onChange(file);
+                        }}
+                        {...rest}
+                      />
+                    </FormControl>
+                    <FormDescription>Upload an image for your blog post.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="content"
@@ -131,8 +186,8 @@ export default function CreateBlogPostPage() {
                 )}
               />
               <div className="flex gap-2">
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? 'Publishing...' : 'Publish Post'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Publishing...' : 'Publish Post'}
                 </Button>
                 <Button variant="outline" type="button" onClick={() => router.back()}>
                     Cancel
