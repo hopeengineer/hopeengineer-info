@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlusCircle, Download } from "lucide-react";
 import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -13,6 +13,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { importArticle } from "@/ai/flows/import-article-flow";
+import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+
 
 type BlogPost = {
     id: string;
@@ -31,6 +34,7 @@ const BlogPage = () => {
   const { isAdmin } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
   const [isImporting, setIsImporting] = useState(false);
   const [importUrl, setImportUrl] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -43,7 +47,7 @@ const BlogPage = () => {
   const { data: blogPosts, isLoading } = useCollection<BlogPost>(postsQuery);
 
   const handleImport = async () => {
-    if (!importUrl) {
+    if (!importUrl || !firestore) {
         toast({
             variant: "destructive",
             title: "URL is missing",
@@ -53,13 +57,39 @@ const BlogPage = () => {
     }
     setIsImporting(true);
     try {
-        await importArticle({ url: importUrl });
+        const parsedArticle = await importArticle({ url: importUrl });
+        
+        const slug = parsedArticle.title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .trim()
+          .replace(/[\s-]+/g, '-');
+
+        const newPost = {
+            title: parsedArticle.title,
+            description: parsedArticle.description,
+            content: parsedArticle.content,
+            slug,
+            author: parsedArticle.author || 'HopeEngineer',
+            date: format(new Date(), 'MMMM d, yyyy'),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            image: {
+                imageUrl: parsedArticle.imageUrl,
+                imageHint: 'imported article',
+            }
+        };
+
+        const postsCollection = collection(firestore, 'blogPosts');
+        await addDoc(postsCollection, newPost);
+
         toast({
             title: "Import Successful",
             description: "The article has been imported and saved.",
         });
         setIsDialogOpen(false);
         setImportUrl('');
+        // No need to manually refetch, useCollection will update automatically
     } catch (error) {
         console.error("Import error:", error);
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
