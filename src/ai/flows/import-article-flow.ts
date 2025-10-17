@@ -70,7 +70,7 @@ const importArticleFlow = ai.defineFlow(
 
     // 2. Parse the HTML to get the main article body for the LLM
     const root = parse(htmlContent);
-    const articleBody = root.querySelector('article')?.innerHTML || root.querySelector('body')?.innerHTML || '';
+    const articleBody = root.querySelector('body')?.innerHTML || '';
 
     if (!articleBody) {
         throw new Error('Could not find article content to parse.');
