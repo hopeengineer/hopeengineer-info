@@ -21,7 +21,7 @@
         },
         "lastName": {
           "type": "string",
-          "description": "Last name of the user."
+a          "description": "Last name of the user."
         },
         "registrationDate": {
           "type": "string",
@@ -41,6 +41,24 @@
         "lastName",
         "registrationDate"
       ]
+    },
+    "BlogPost": {
+      "title": "Blog Post",
+      "type": "object",
+      "description": "Represents a single blog post.",
+      "properties": {
+        "slug": { "type": "string", "description": "URL-friendly slug for the post." },
+        "title": { "type": "string", "description": "The title of the blog post." },
+        "description": { "type": "string", "description": "A short summary of the post." },
+        "date": { "type": "string", "description": "Publication date of the post." },
+        "author": { "type": "string", "description": "The author of the post." },
+        "imageUrl": { "type": "string", "description": "URL for the post's main image." },
+        "imageHint": { "type": "string", "description": "AI hint for the image." },
+        "content": { "type": "string", "description": "The full HTML content of the blog post." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the post was created." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the post was last updated." }
+      },
+      "required": ["slug", "title", "description", "date", "author", "content"]
     }
   },
   "auth": {
@@ -67,8 +85,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/blogPosts/{postId}",
+        "definition": {
+          "entityName": "BlogPost",
+          "schema": {
+            "$ref": "#/backend/entities/BlogPost"
+          },
+          "description": "Stores individual blog post documents.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique identifier for the blog post."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "This Firestore structure prioritizes authorization independence and clarity for the HopeEngineer Hub application. User data is stored in a path-based structure under `/users/{userId}`. This provides straightforward ownership for private user data, simplifying security rules. The design explicitly avoids using `get()` calls in security rules by not creating dependencies on parent documents. This ensures atomic operations are possible, since all authorization is path-based."
+    "reasoning": "This Firestore structure prioritizes authorization independence and clarity. User data is stored in a path-based structure under `/users/{userId}`. Blog posts are stored in a top-level `blogPosts` collection for easy public querying. Security rules will enforce that only admins can write to `blogPosts`, while all users can read them."
   }
 }

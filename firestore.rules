@@ -1,59 +1,67 @@
 /**
- * @fileoverview Firestore Security Rules for HopeEngineer Hub.
+ * @file Firestore Security Rules for HopeEngineer Hub.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model, where each user can only access their own data.
+ * This ruleset enforces a strict user-ownership model. Each user has exclusive
+ * access to their own data, stored under their unique user ID.
  *
  * Data Structure:
- * All data is nested under /users/{userId}, ensuring clear ownership and simplified rules.
+ * All user data is nested under /users/{userId}, where {userId} corresponds
+ * to the Firebase Auth UID.
  *
  * Key Security Decisions:
- * - User listing is disallowed for privacy.
- * - Write access is strictly limited to the owning user.
+ * - User listing is disabled.
+ * - The rules explicitly deny any unauthorized access, ensuring data privacy.
+ * - Data consistency between the path and the document's internal `id` field is enforced.
  *
  * Denormalization for Authorization:
- * - The User document's `id` field MUST match the `userId` path parameter to enforce ownership.
- *   This avoids needing to query for user information and simplifies the rules.
+ * The `id` field within the `/users/{userId}` document is used to ensure that
+ * the document ID matches the authenticated user's UID, preventing unauthorized
+ * data access or modification.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Enforces strict user ownership for the /users/{userId} path.
-     * Only the authenticated user matching the {userId} can read or write their own profile.
+     * @description Allows a user to read, create, update, and delete their own user document.
      * @path /users/{userId}
-     * @allow (create) - User with UID 'user_abc' can create their profile at /users/user_abc if the id field matches.
-     * @allow (get) - User with UID 'user_abc' can get their profile at /users/user_abc.
-     * @allow (update) - User with UID 'user_abc' can update their profile at /users/user_abc.
-     * @allow (delete) - User with UID 'user_abc' can delete their profile at /users/user_abc.
-     * @deny (create) - User with UID 'user_def' cannot create a profile at /users/user_abc.
-     * @deny (get) - User with UID 'user_def' cannot get the profile at /users/user_abc.
-     * @deny (update) - User with UID 'user_def' cannot update the profile at /users/user_abc.
-     * @deny (delete) - User with UID 'user_def' cannot delete the profile at /users/user_abc.
-     * @principle Enforces document ownership for all operations. Validates user ID on create and enforces immutability on update.
+     * @allow (get, create, update, delete) if the user is signed in and their UID matches the {userId} path segment.
+     * @deny (get, create, update, delete) if the user is not signed in or their UID does not match the {userId} path segment.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      // Helpers
+      // Check if the user is signed in
       function isSignedIn() {
         return request.auth != null;
       }
 
+      // Check if the user is the owner of the document
       function isOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
 
+      // Check if the user is the owner of the existing document
       function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
+        return (isOwner(userId) && resource != null);
       }
 
-      // Read Permissions
-      allow get: if isOwner(userId);
+      // Allows a user to get their own user document.
+      allow get: if isSignedIn() && isOwner(userId);
+
+      // Prevents listing of all users.
       allow list: if false;
 
-      // Write Permissions
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      // Allows a user to create their own user document if the user ID in the
+      // document matches the authenticated user's ID.
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == request.auth.uid;
+
+      // Allows a user to update their own user document if the user ID in the
+      // document matches the authenticated user's ID. Enforces immutability of the user ID.
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+
+      // Allows a user to delete their own user document if the user ID in the
+      // document matches the authenticated user's ID.
       allow delete: if isExistingOwner(userId);
     }
   }
