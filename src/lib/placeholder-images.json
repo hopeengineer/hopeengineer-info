@@ -1,3 +1,94 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "about-me",
+      "description": "A portrait of the site owner.",
+      "imageUrl": "https://picsum.photos/seed/100/800/800",
+      "imageHint": "portrait person"
+    },
+    {
+      "id": "testimonial-1",
+      "description": "First client testimonial screenshot.",
+      "imageUrl": "https://picsum.photos/seed/101/800/600",
+      "imageHint": "testimonial screenshot"
+    },
+    {
+      "id": "testimonial-2",
+      "description": "Second client testimonial screenshot.",
+      "imageUrl": "https://picsum.photos/seed/102/800/600",
+      "imageHint": "review message"
+    },
+    {
+      "id": "testimonial-3",
+      "description": "Third client testimonial screenshot.",
+      "imageUrl": "https://picsum.photos/seed/103/800/600",
+      "imageHint": "feedback chat"
+    },
+    {
+      "id": "service-sessions",
+      "description": "Image for 1-on-1 sessions service.",
+      "imageUrl": "https://picsum.photos/seed/201/600/400",
+      "imageHint": "coaching session"
+    },
+    {
+      "id": "service-community",
+      "description": "Image for Full Circle (FC) Skool community service.",
+      "imageUrl": "https://picsum.photos/seed/202/600/400",
+      "imageHint": "online community"
+    },
+    {
+      "id": "service-automation",
+      "description": "Image for AI content automation services.",
+      "imageUrl": "https://picsum.photos/seed/203/600/400",
+      "imageHint": "ai automation"
+    },
+    {
+      "id": "ai-app-1",
+      "description": "Icon for the first AI app.",
+      "imageUrl": "https://picsum.photos/seed/301/500/500",
+      "imageHint": "app icon"
+    },
+    {
+      "id": "ai-app-2",
+      "description": "Icon for the second AI app.",
+      "imageUrl": "https://picsum.photos/seed/302/500/500",
+      "imageHint": "tech logo"
+    },
+    {
+      "id": "ai-app-3",
+      "description": "Icon for the third AI app.",
+      "imageUrl": "https://picsum.photos/seed/303/500/500",
+      "imageHint": "software icon"
+    },
+    {
+      "id": "ai-app-4",
+      "description": "Icon for the fourth AI app.",
+      "imageUrl": "https://picsum.photos/seed/304/500/500",
+      "imageHint": "abstract logo"
+    },
+    {
+      "id": "blog-1",
+      "description": "Image for the first blog post about AI.",
+      "imageUrl": "https://picsum.photos/seed/401/600/400",
+      "imageHint": "artificial intelligence"
+    },
+    {
+      "id": "blog-2",
+      "description": "Image for the second blog post about engineering.",
+      "imageUrl": "https://picsum.photos/seed/402/600/400",
+      "imageHint": "software engineering"
+    },
+    {
+      "id": "blog-3",
+      "description": "Image for the third blog post about growth.",
+      "imageUrl": "https://picsum.photos/seed/403/600/400",
+      "imageHint": "personal growth"
+    },
+    {
+      "id": "blog-4",
+      "description": "Image for the fourth blog post about productivity.",
+      "imageUrl": "https://picsum.photos/seed/404/600/400",
+      "imageHint": "productivity tools"
+    }
+  ]
 }
