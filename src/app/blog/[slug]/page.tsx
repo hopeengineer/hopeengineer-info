@@ -2,10 +2,10 @@
 
 import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useDoc, useFirestore, useUser } from "@/firebase";
+import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { deleteDocumentNonBlocking } from "@/firebase";
+import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -46,7 +46,11 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   const { isAdmin } = useUser();
   const firestore = useFirestore();
 
-  const postRef = firestore ? doc(firestore, "blogPosts", slug) : null;
+  const postRef = useMemoFirebase(() => {
+    if (!firestore || !slug) return null;
+    return doc(firestore, "blogPosts", slug);
+  }, [firestore, slug]);
+  
   const { data: post, isLoading } = useDoc<BlogPost>(postRef);
 
   if (isLoading) {
