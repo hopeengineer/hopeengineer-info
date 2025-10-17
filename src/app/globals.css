@@ -82,27 +82,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Hero Animation */
-@keyframes move {
-  100% {
-      transform: translate3d(0, 0, 1px) rotate(360deg);
-  }
-}
-
-.hero-bg {
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    top: 0;
-    left: 0;
-    background: hsl(var(--background));
-    overflow: hidden;
-}
-
-.hero-bg-particle {
-    position: absolute;
-    border-radius: 50%;
-    animation: move linear infinite;
-    background: hsl(var(--accent));
-}
