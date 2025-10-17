@@ -28,7 +28,7 @@ type BlogPost = {
   id: string;
   slug: string;
   title: string;
-  description: string;
+  description:string;
   content: string;
   image: {
     imageUrl: string;
@@ -76,6 +76,7 @@ export default function EditBlogPostPage() {
   }, [post, form]);
 
   useEffect(() => {
+    // Wait for auth check to complete before making decisions
     if (!isUserLoading && !isAdmin) {
       toast({ variant: 'destructive', title: 'Unauthorized', description: 'You do not have permission to edit this page.' });
       router.push(`/blog/${slug}`);
@@ -140,16 +141,10 @@ export default function EditBlogPostPage() {
     );
   }
   
-  // Only call notFound if loading is complete and there's still no post.
-  if (!isLoading && !post) {
+  // Only after loading is complete, if there's still no post, then we show a 404.
+  if (!post) {
     notFound();
   }
-
-  // This check is now safe because it only runs after loading is complete and post is confirmed to exist.
-  if (!post) {
-      return null;
-  }
-
 
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
