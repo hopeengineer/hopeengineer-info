@@ -1,12 +1,39 @@
+'use client';
+
 import Hero from "@/components/hero";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { blogPosts, services } from "@/lib/data";
+import { services } from "@/lib/data";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type BlogPost = {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    date: string;
+    author: string;
+    image: {
+      imageUrl: string;
+      imageHint: string;
+    };
+}
 
 export default function Home() {
+  const firestore = useFirestore();
+
+  const latestPostsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'blogPosts'), orderBy('date', 'desc'), limit(3));
+  }, [firestore]);
+
+  const { data: latestPosts, isLoading } = useCollection<BlogPost>(latestPostsQuery);
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1">
@@ -55,7 +82,20 @@ export default function Home() {
               </div>
             </div>
             <div className="mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-3 pt-12">
-              {blogPosts.slice(0, 3).map((post) => (
+              {isLoading && (
+                [...Array(3)].map((_, i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <Skeleton className="aspect-video w-full" />
+                    <CardContent className="p-6">
+                      <Skeleton className="h-6 w-3/4 mb-2" />
+                      <Skeleton className="h-4 w-1/2 mb-4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6 mt-2" />
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+              {latestPosts?.map((post) => (
                  <Card key={post.slug} className="overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
                     <Link href={`/blog/${post.slug}`} className="block">
                       <Image
