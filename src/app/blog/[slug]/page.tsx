@@ -61,7 +61,10 @@ function BlogPostContent({ slug }: { slug: string }) {
   const { data: posts, isLoading: isPostsLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
-  const isLoading = isUserLoading || isPostsLoading;
+  const isLoading = isUserLoading || (!!postQuery && isPostsLoading);
+  
+  // Condition for not found: query is valid, loading is finished, and we still have no post.
+  const isNotFound = !isLoading && !!postQuery && !post;
 
   const handleClearAllPosts = async () => {
     if (!loggedInFirestore) return; // Must use authenticated instance
@@ -77,7 +80,7 @@ function BlogPostContent({ slug }: { slug: string }) {
     router.push("/blog");
   }
 
-  if (isLoading) {
+  if (isLoading || !postQuery) {
     return (
       <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <header className="mb-8 text-center">
@@ -95,7 +98,7 @@ function BlogPostContent({ slug }: { slug: string }) {
     );
   }
 
-  if (!isLoading && !post) {
+  if (isNotFound) {
       if (isAdmin) {
       return (
         <div className="container text-center py-20">
@@ -122,9 +125,10 @@ function BlogPostContent({ slug }: { slug: string }) {
       )
     }
     notFound();
+    return null; // notFound() throws an error, but this makes it explicit.
   }
 
-  // This check is now safe because it only runs after loading is complete.
+  // This check is now safe because it only runs after loading is complete and we know 'post' exists.
   if (!post) {
     return null; 
   }
