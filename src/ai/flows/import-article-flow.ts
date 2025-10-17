@@ -103,7 +103,7 @@ const importArticleFlow = ai.defineFlow(
         }
     };
 
-    // Use the correctly initialized adminDb
+    // Use the correctly initialized adminDb from src/firebase/server.ts
     const postsCollection = adminDb.collection('blogPosts');
     await postsCollection.add(newPost);
   }
