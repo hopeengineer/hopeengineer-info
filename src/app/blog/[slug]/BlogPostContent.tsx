@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
+import { useEffect } from "react";
 
 type BlogPost = {
     id: string;
@@ -61,8 +62,15 @@ export default function BlogPostContent() {
   // This is the simplified, robust loading state. It's only true if the query is valid and we are fetching.
   const isLoading = !!postQuery && isPostsLoading;
   
-  // Condition for not found: query is valid, loading is finished, and we still have no post.
+  // A stable determination of notFound, only true after loading is complete and we still have no post.
   const isNotFound = !isLoading && !!postQuery && !post;
+
+  useEffect(() => {
+    // This effect will trigger the notFound() page only when `isNotFound` becomes stably true.
+    if (isNotFound) {
+      notFound();
+    }
+  }, [isNotFound]);
   
   const handleClearAllPosts = async () => {
     // This action still requires an authenticated admin.
@@ -103,14 +111,16 @@ export default function BlogPostContent() {
     );
   }
   
+  // This condition now safely handles the case where a post genuinely doesn't exist.
+  // The useEffect above will handle the actual 404 redirection.
   if (isNotFound) {
-      // The admin-only "Clear Posts" tool is a fallback for data issues.
+      // For an admin, we can show a special recovery UI. For others, the notFound() will take over.
       if (isAdmin) {
         return (
           <div className="container text-center py-20">
-            <h1 className="text-3xl font-bold text-destructive mb-4">Post Not Found (404)</h1>
-            <p className="text-muted-foreground mb-8">The data might be improperly structured or not imported correctly.</p>
-            <AlertDialog>
+            <h1 className="text-3xl font-bold text-destructive mb-4">Post Not Found</h1>
+            <p className="text-muted-foreground mb-8">The requested post does not exist or could not be loaded.</p>
+             <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive">TEMPORARY: Clear All Blog Posts</Button>
                 </AlertDialogTrigger>
@@ -128,28 +138,22 @@ export default function BlogPostContent() {
                 </AlertDialogContent>
               </AlertDialog>
           </div>
-        )
+        );
       }
-      // For regular users, trigger the standard Next.js 404 page.
-      notFound();
+      // For non-admins, this will be a blank screen for a moment before the useEffect redirects to the 404 page.
       return null;
   }
   
-  // This state should ideally not be reached if the above logic is correct, but as a fallback, show a skeleton.
+  // We can only get here if isLoading is false and post exists.
   if (!post) {
+      // This state should rarely be reached if the above logic is correct, but it's a safe fallback.
       return (
         <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <header className="mb-8 text-center">
-              <Skeleton className="h-12 w-3/4 mx-auto" />
-              <Skeleton className="h-6 w-1/2 mx-auto mt-4" />
-              <Skeleton className="h-4 w-1/3 mx-auto mt-6" />
-          </header>
-          <Skeleton className="w-full aspect-video rounded-lg" />
-          <div className="mt-8 space-y-4">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-5/6" />
-          </div>
+            <header className="mb-8 text-center">
+                <Skeleton className="h-12 w-3/4 mx-auto" />
+                <Skeleton className="h-6 w-1/2 mx-auto mt-4" />
+            </header>
+            <Skeleton className="w-full aspect-video rounded-lg" />
         </div>
       );
   }
