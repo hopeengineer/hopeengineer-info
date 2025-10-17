@@ -21,7 +21,7 @@ const ArticleDataSchema = z.object({
     description: z.string().describe('A short, one or two-sentence summary of the article.'),
     author: z.string().describe('The name of the article\'s author.'),
     imageUrl: z.string().url().describe('The URL for the main hero image of the article. If no image is found, use a placeholder from picsum.photos.'),
-    content: z.string().describe('The full inner HTML of the article body.'),
+    content: z.string().describe('The full, cleaned inner HTML of the main article body. All navigation, ads, headers, footers, and other non-article content should be removed.'),
 });
 export type ImportArticleOutput = z.infer<typeof ArticleDataSchema>;
 
@@ -36,13 +36,13 @@ const articleParserPrompt = ai.definePrompt({
     name: 'articleParserPrompt',
     input: { schema: z.object({ articleHtml: z.string() }) },
     output: { schema: ArticleDataSchema },
-    prompt: `You are a web content parsing expert. You will be given the HTML content of a blog post.
-    Your task is to extract the following information:
+    prompt: `You are an expert web content parser. You will be given the HTML content of a blog post.
+    Your task is to extract the following information and clean it up:
     1.  The main title of the article.
     2.  A concise one or two-sentence summary to be used as a description.
     3.  The author's name.
     4.  The URL of the main feature image for the article. If no prominent image is found, generate a random placeholder image URL from 'https://picsum.photos/seed/RANDOM_SEED/1200/675'.
-    5.  The full inner HTML of the main article content.
+    5.  The full inner HTML of the main article content. This is critical: you must remove all unrelated content like navigation bars, sidebars, advertisements, social media sharing buttons, "related posts" sections, and footers. The output should be only the core article text, headings, and images.
 
     Analyze the provided HTML and return the data in the specified JSON format.
 
@@ -73,14 +73,14 @@ const importArticleFlow = ai.defineFlow(
         throw new Error('Could not find article content to parse.');
     }
 
-    // 3. Use the LLM to extract structured data from the messy HTML
+    // 3. Use the LLM to extract structured and CLEANED data from the messy HTML
     const { output } = await articleParserPrompt({ articleHtml: articleBody });
     
     if (!output) {
         throw new Error('AI parsing failed to return data.');
     }
     
-    // 4. Return the structured data to the client
-    return { ...output, content: articleBody };
+    // 4. Return the structured, cleaned data to the client
+    return output;
   }
 );
