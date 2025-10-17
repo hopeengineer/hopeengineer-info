@@ -9,7 +9,7 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 // --- CONSTANTS ---
 // For demonstration purposes, we'll hardcode an admin email.
 // In a real application, this would be managed via custom claims or a database role.
-const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_EMAIL = 'csoft.sameera@gmail.com';
 
 
 // --- INTERFACES & TYPES ---
