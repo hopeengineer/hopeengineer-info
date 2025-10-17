@@ -87,7 +87,7 @@ export default function CreateBlogPostPage() {
       };
 
       const postsCollection = collection(firestore, 'blogPosts');
-      const docRef = await addDoc(postsCollection, newPost);
+      await addDoc(postsCollection, newPost);
 
       toast({
         title: 'Post Created!',
