@@ -1,5 +1,3 @@
-'use server';
-
 import * as admin from 'firebase-admin';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
