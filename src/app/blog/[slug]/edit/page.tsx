@@ -1,10 +1,11 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, query, collection, where, limit } from 'firebase/firestore';
-import { useForm, zodResolver } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
