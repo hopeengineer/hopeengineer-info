@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlusCircle, Download } from "lucide-react";
-import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useCollection, useFirestore, useMemoFirebase, FirestorePermissionError, errorEmitter } from "@/firebase";
 import { collection, query, orderBy, writeBatch, doc } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 import { blogPosts as hardcodedBlogPosts } from "@/lib/data";
@@ -37,7 +37,7 @@ const BlogPage = () => {
 
   const { data: blogPosts, isLoading } = useCollection<BlogPost>(postsQuery);
 
-  const handleImportPosts = async () => {
+  const handleImportPosts = () => {
     if (!firestore) {
       toast({
         variant: "destructive",
@@ -48,36 +48,49 @@ const BlogPage = () => {
     }
     setIsImporting(true);
 
-    try {
-      const batch = writeBatch(firestore);
-      const postsCollection = collection(firestore, "blogPosts");
+    const batch = writeBatch(firestore);
+    const postsCollection = collection(firestore, "blogPosts");
+    
+    // For the purpose of the error, we can just capture the last post.
+    let lastPostForError: any = null;
 
-      hardcodedBlogPosts.forEach(post => {
-        // The document ID will be the slug to ensure uniqueness and clean URLs
-        const docRef = doc(postsCollection, post.slug);
-        const postData = {
-          ...post,
-          // content is already in the hardcoded data
-        };
-        batch.set(docRef, postData);
-      });
+    hardcodedBlogPosts.forEach(post => {
+      const docRef = doc(postsCollection, post.slug);
+      const postData = { ...post };
+      lastPostForError = postData; // Keep track of data being written
+      batch.set(docRef, postData);
+    });
 
-      await batch.commit();
-      
-      toast({
-        title: "Success!",
-        description: `${hardcodedBlogPosts.length} posts have been imported to Firestore.`,
+    batch.commit()
+      .then(() => {
+        toast({
+          title: "Success!",
+          description: `${hardcodedBlogPosts.length} posts have been imported to Firestore.`,
+        });
+      })
+      .catch((serverError) => {
+        // Create a contextual error for the batch write operation.
+        // NOTE: A batch write is treated as a single 'write' operation in security rules.
+        // We'll use the collection path and the data of one of the posts for context.
+        const contextualError = new FirestorePermissionError({
+          path: postsCollection.path,
+          operation: 'write',
+          requestResourceData: lastPostForError, // Provide an example of the data
+        });
+
+        // Emit the error for the global listener to catch and display.
+        errorEmitter.emit('permission-error', contextualError);
+        
+        // Also show a generic toast to the user.
+        toast({
+            variant: "destructive",
+            title: "Import Failed",
+            description: "You do not have permission to import posts.",
+        });
+      })
+      .finally(() => {
+        setIsImporting(false);
       });
-    } catch (error: any) {
-      console.error("Error importing posts: ", error);
-      toast({
-        variant: "destructive",
-        title: "Import Failed",
-        description: error.message || "An unexpected error occurred while importing posts.",
-      });
-    } finally {
-      setIsImporting(false);
-    }
   };
 
 
