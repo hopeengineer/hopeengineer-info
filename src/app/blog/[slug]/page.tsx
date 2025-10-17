@@ -89,6 +89,13 @@ function BlogPostContent({ slug }: { slug: string }) {
     notFound();
   }
 
+  // This check is now safe because it only runs after loading is complete.
+  if (!post) {
+    // This case should be handled by the notFound() call above,
+    // but it's good practice to have a fallback.
+    return null; 
+  }
+
   return (
     <article className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <header className="mb-8 text-center">
