@@ -1,3 +1,7 @@
+
+'use client';
+
+import React from 'react';
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -8,8 +12,13 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { testimonials } from "@/lib/data";
+import Autoplay from "embla-carousel-autoplay";
 
 const Testimonials = () => {
+  const plugin = React.useRef(
+    Autoplay({ delay: 5000, stopOnInteraction: true })
+  )
+
   return (
     <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32 bg-background">
       <div className="container px-4 md:px-6">
@@ -24,10 +33,13 @@ const Testimonials = () => {
         </div>
         <div className="py-12">
           <Carousel
+            plugins={[plugin.current]}
             opts={{
               align: "start",
               loop: true,
             }}
+            onMouseEnter={() => plugin.current.stop()}
+            onMouseLeave={() => plugin.current.reset()}
             className="w-full max-w-4xl mx-auto"
           >
             <CarouselContent>
