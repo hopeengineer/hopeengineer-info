@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 type BlogPost = {
     id: string;
@@ -43,10 +43,13 @@ export default function BlogPostContent() {
 
   const { toast } = useToast();
   const { user, isAdmin, isUserLoading } = useUser();
-  const loggedInFirestore = useFirestore();
+  
+  // Conditionally get the authenticated firestore instance ONLY if the user is logged in.
+  // This prevents the useFirestore() hook from throwing an error for logged-out users.
+  const loggedInFirestore = user ? useFirestore() : null;
 
-  // Use the public instance if the user isn't logged in.
-  const firestore = user ? loggedInFirestore : publicFirestore;
+  // If the user is logged in, use their dedicated instance. Otherwise, use the public one.
+  const firestore = useMemo(() => loggedInFirestore || publicFirestore, [loggedInFirestore]);
 
   // The query will be null until `firestore` and `slug` are available.
   const postQuery = useMemoFirebase(() => {
