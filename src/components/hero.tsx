@@ -66,7 +66,7 @@ const AnimatedHero = () => {
               </Button>
             </Link>
             <Link href="/blog">
-              <Button size="lg" variant="outline" className="border-primary text-primary-foreground hover:bg-primary/20 hover:text-primary-foreground">
+              <Button size="lg" variant="outline" className="border-primary hover:bg-primary/20">
                 Explore Blog
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
