@@ -1,14 +1,14 @@
+'use client';
 import Link from "next/link";
 import Image from "next/image";
 import { blogPosts } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlusCircle, Download } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/firebase";
 
 const BlogPage = () => {
-  // Mocking admin role for UI demonstration
-  const isAdmin = true;
+  const { isAdmin } = useUser();
 
   return (
     <div className="container max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">

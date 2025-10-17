@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 export default function ProfilePage() {
-  const { user, isUserLoading, auth } = useUser();
+  const { user, isUserLoading, auth, isAdmin } = useUser();
   const router = useRouter();
 
   useEffect(() => {
@@ -53,9 +54,12 @@ export default function ProfilePage() {
             <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
             <AvatarFallback>{user.email?.[0]?.toUpperCase() ?? 'U'}</AvatarFallback>
           </Avatar>
-          <CardTitle className="pt-4 text-2xl font-headline">
-            {user.displayName ?? 'Welcome!'}
-          </CardTitle>
+          <div className="flex items-center gap-2 pt-4">
+            <CardTitle className="text-2xl font-headline">
+              {user.displayName ?? 'Welcome!'}
+            </CardTitle>
+            {isAdmin && <Badge variant="destructive">Admin</Badge>}
+          </div>
           <CardDescription>{user.email}</CardDescription>
         </CardHeader>
         <CardContent>
