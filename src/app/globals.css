@@ -39,19 +39,19 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 224 71% 4%; /* A deep, near-black blue */
-    --foreground: 210 40% 98%; /* A very light grey for body text */
-    --card: 224 71% 9%; /* A slightly lighter blue for cards */
+    --background: 220 14% 10%;
+    --foreground: 210 40% 98%;
+    --card: 220 13% 15%;
     --card-foreground: 210 40% 98%;
-    --popover: 224 71% 4%;
+    --popover: 220 14% 10%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%; /* Primary text color (e.g., headlines) is now very light */
-    --primary-foreground: 224 71% 4%; /* Text on primary elements is now dark */
-    --secondary: 217 33% 17%; /* A muted blue-gray for secondary elements */
+    --primary: 210 40% 98%;
+    --primary-foreground: 220 14% 10%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%; /* A lighter muted color for less important text */
-    --accent: 30 100% 50%; /* Blood Orange */
+    --muted-foreground: 215 20% 65%;
+    --accent: 30 100% 50%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
@@ -104,5 +104,5 @@
     position: absolute;
     border-radius: 50%;
     animation: move linear infinite;
-    background: hsl(var(--primary));
+    background: hsl(var(--accent));
 }
