@@ -5,8 +5,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlusCircle, Download } from "lucide-react";
 import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, writeBatch, doc } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
+import { blogPosts as hardcodedBlogPosts } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 type BlogPost = {
     id: string;
@@ -24,6 +27,8 @@ type BlogPost = {
 const BlogPage = () => {
   const { isAdmin } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isImporting, setIsImporting] = useState(false);
   
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -31,6 +36,50 @@ const BlogPage = () => {
   }, [firestore]);
 
   const { data: blogPosts, isLoading } = useCollection<BlogPost>(postsQuery);
+
+  const handleImportPosts = async () => {
+    if (!firestore) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Firestore is not available.",
+      });
+      return;
+    }
+    setIsImporting(true);
+
+    try {
+      const batch = writeBatch(firestore);
+      const postsCollection = collection(firestore, "blogPosts");
+
+      hardcodedBlogPosts.forEach(post => {
+        // The document ID will be the slug to ensure uniqueness and clean URLs
+        const docRef = doc(postsCollection, post.slug);
+        const postData = {
+          ...post,
+          // content is already in the hardcoded data
+        };
+        batch.set(docRef, postData);
+      });
+
+      await batch.commit();
+      
+      toast({
+        title: "Success!",
+        description: `${hardcodedBlogPosts.length} posts have been imported to Firestore.`,
+      });
+    } catch (error: any) {
+      console.error("Error importing posts: ", error);
+      toast({
+        variant: "destructive",
+        title: "Import Failed",
+        description: error.message || "An unexpected error occurred while importing posts.",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
 
   return (
     <div className="container max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -49,9 +98,9 @@ const BlogPage = () => {
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Post
           </Button>
-          <Button variant="outline" disabled>
+          <Button variant="outline" onClick={handleImportPosts} disabled={isImporting || (blogPosts && blogPosts.length > 0)}>
             <Download className="mr-2 h-4 w-4" />
-            Import Posts
+            {isImporting ? "Importing..." : "Import Posts"}
           </Button>
         </div>
       )}
@@ -76,6 +125,15 @@ const BlogPage = () => {
               </Card>
             ))}
          </div>
+      )}
+
+      {!isLoading && blogPosts?.length === 0 && (
+        <div className="text-center text-muted-foreground py-16">
+          <h2 className="text-2xl font-semibold">No posts yet!</h2>
+          <p className="mt-2">
+            {isAdmin ? "Click the 'Import Posts' button to add the initial blog posts." : "Check back soon for new content."}
+          </p>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
