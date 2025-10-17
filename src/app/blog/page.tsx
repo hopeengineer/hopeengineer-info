@@ -5,11 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlusCircle, Download } from "lucide-react";
 import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, writeBatch, doc } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
-import { blogPosts as hardcodedBlogPosts } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { importArticle } from "@/ai/flows/import-article-flow";
 
 type BlogPost = {
     id: string;
@@ -29,6 +32,8 @@ const BlogPage = () => {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
+  const [importUrl, setImportUrl] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -37,52 +42,34 @@ const BlogPage = () => {
 
   const { data: blogPosts, isLoading } = useCollection<BlogPost>(postsQuery);
 
-  const handleImportPosts = () => {
-    if (!firestore) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Firestore is not available.",
-      });
-      return;
+  const handleImport = async () => {
+    if (!importUrl) {
+        toast({
+            variant: "destructive",
+            title: "URL is missing",
+            description: "Please enter a URL to import.",
+        });
+        return;
     }
     setIsImporting(true);
-
-    const batch = writeBatch(firestore);
-    const postsCollection = collection(firestore, "blogPosts");
-    
-    hardcodedBlogPosts.forEach(post => {
-      const docRef = doc(postsCollection); 
-      const postData = {
-        slug: post.slug,
-        title: post.title,
-        description: post.description,
-        date: post.date,
-        author: post.author,
-        image: post.image,
-        content: post.content,
-      };
-      batch.set(docRef, postData);
-    });
-
-    batch.commit()
-      .then(() => {
+    try {
+        await importArticle({ url: importUrl });
         toast({
-          title: "Success!",
-          description: `${hardcodedBlogPosts.length} posts have been imported to Firestore.`,
+            title: "Import Successful",
+            description: "The article has been imported and saved.",
         });
-      })
-      .catch((serverError) => {
-        console.error("Firestore batch commit error:", serverError);
+        setIsDialogOpen(false);
+        setImportUrl('');
+    } catch (error) {
+        console.error("Import error:", error);
         toast({
             variant: "destructive",
             title: "Import Failed",
-            description: "You do not have permission to import posts. Check console for details.",
+            description: "Could not import the article. Please check the URL and try again.",
         });
-      })
-      .finally(() => {
+    } finally {
         setIsImporting(false);
-      });
+    }
   };
 
 
@@ -105,10 +92,41 @@ const BlogPage = () => {
               Create Post
             </Link>
           </Button>
-          <Button variant="outline" onClick={handleImportPosts} disabled={isImporting || (blogPosts && blogPosts.length > 0)}>
-            <Download className="mr-2 h-4 w-4" />
-            {isImporting ? "Importing..." : "Import Posts"}
-          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Import from URL
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Import Article</DialogTitle>
+                    <DialogDescription>
+                        Paste the URL of a Medium or Substack article to import it.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="import-url" className="text-right">
+                            URL
+                        </Label>
+                        <Input
+                            id="import-url"
+                            value={importUrl}
+                            onChange={(e) => setImportUrl(e.target.value)}
+                            className="col-span-3"
+                            placeholder="https://medium.com/..."
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleImport} disabled={isImporting}>
+                        {isImporting ? "Importing..." : "Import"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
 
@@ -138,7 +156,7 @@ const BlogPage = () => {
         <div className="text-center text-muted-foreground py-16">
           <h2 className="text-2xl font-semibold">No posts yet!</h2>
           <p className="mt-2">
-            {isAdmin ? "Click the 'Import Posts' button to add the initial blog posts." : "Check back soon for new content."}
+            {isAdmin ? "Click 'Import from URL' to add your first post." : "Check back soon for new content."}
           </p>
         </div>
       )}
