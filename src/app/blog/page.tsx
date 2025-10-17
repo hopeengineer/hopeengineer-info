@@ -8,7 +8,7 @@ import { useUser, useCollection, useFirestore, useMemoFirebase, publicFirestore 
 import { collection, query, orderBy, serverTimestamp, addDoc, Firestore } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -32,7 +32,9 @@ type BlogPost = {
 
 const BlogPage = () => {
   const { user, isAdmin, isUserLoading } = useUser();
-  const loggedInFirestore = useFirestore(); // This can throw if user is not logged in
+  // Conditionally get the authenticated firestore instance ONLY if the user is logged in.
+  // This prevents the useFirestore() hook from throwing an error for logged-out users.
+  const loggedInFirestore = user ? useFirestore() : null;
   const router = useRouter();
   const { toast } = useToast();
 
@@ -40,18 +42,16 @@ const BlogPage = () => {
   const [importHtml, setImportHtml] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  // Choose the correct firestore instance.
-  // When the user is not logged in, `useFirestore()` would throw an error.
-  // We check `user` from `useUser()` which is safe for logged-out states.
-  const firestore = user ? loggedInFirestore : publicFirestore;
+  // If the user is logged in, use their dedicated instance. Otherwise, use the public one.
+  const firestore = useMemo(() => loggedInFirestore || publicFirestore, [loggedInFirestore]);
   
   const postsQuery = useMemoFirebase(() => {
-    // Firestore will be null initially if logged out, so we wait.
+    // The query will be null until `firestore` is available.
     if (!firestore) return null;
     return query(collection(firestore, 'blogPosts'), orderBy('date', 'desc'));
   }, [firestore]);
 
-  // isUserLoading is used to wait for auth state before deciding which firestore instance to use.
+  // isPostsLoading will be true only when `postsQuery` is valid and fetching starts.
   const { data: blogPosts, isLoading: isPostsLoading } = useCollection<BlogPost>(postsQuery);
 
   const handleImport = async () => {
@@ -111,7 +111,7 @@ const BlogPage = () => {
     }
   };
 
-  const isLoading = isUserLoading || isPostsLoading;
+  const isLoading = isUserLoading || (!!postsQuery && isPostsLoading);
 
   return (
     <div className="container max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
