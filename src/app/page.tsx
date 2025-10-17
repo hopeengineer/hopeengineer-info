@@ -1,5 +1,4 @@
 import Hero from "@/components/hero";
-import Testimonials from "@/components/testimonials";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { blogPosts, services } from "@/lib/data";
@@ -82,7 +81,6 @@ export default function Home() {
           </div>
         </section>
 
-        <Testimonials />
       </main>
     </div>
   );

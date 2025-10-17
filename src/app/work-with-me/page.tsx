@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { services } from "@/lib/data";
+import Testimonials from "@/components/testimonials";
 
 const WorkWithMePage = () => {
   return (
@@ -43,6 +44,8 @@ const WorkWithMePage = () => {
           </Card>
         ))}
       </div>
+
+      <Testimonials />
 
        <div className="mt-20 text-center">
         <h2 className="text-3xl font-headline font-bold mb-4">Ready to Begin?</h2>
