@@ -3,7 +3,7 @@
 import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { doc, query, collection, where, limit } from "firebase/firestore";
+import { doc, query, collection, where, limit, getDocs, writeBatch } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,17 +55,19 @@ function BlogPostContent({ slug }: { slug: string }) {
   const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
   const post = posts?.[0];
 
-  const handleDelete = () => {
-    if (firestore && post) {
-      const postRef = doc(firestore, 'blogPosts', post.id);
-      deleteDocumentNonBlocking(postRef);
-      toast({
-        title: "Post deleted",
-        description: `"${post.title}" has been successfully deleted.`,
-      });
-      router.push("/blog");
-    }
-  };
+  const handleClearAllPosts = async () => {
+    if (!firestore) return;
+    toast({ title: "Clearing all posts..."});
+    const allPostsQuery = collection(firestore, 'blogPosts');
+    const snapshot = await getDocs(allPostsQuery);
+    const batch = writeBatch(firestore);
+    snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+    toast({ title: "All posts have been cleared.", description: "You can now re-import them from the blog page."});
+    router.push("/blog");
+  }
 
   if (isLoading) {
     return (
@@ -86,6 +88,31 @@ function BlogPostContent({ slug }: { slug: string }) {
   }
 
   if (!isLoading && !post) {
+      if (isAdmin) {
+      return (
+        <div className="container text-center py-20">
+          <h1 className="text-3xl font-bold text-destructive mb-4">Post Not Found (404)</h1>
+          <p className="text-muted-foreground mb-8">The data might be improperly structured.</p>
+          <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">TEMPORARY: Clear All Blog Posts</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete ALL posts from the database. This is a temporary tool to fix the import issue.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearAllPosts}>Yes, delete everything</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+        </div>
+      )
+    }
     notFound();
   }
 
@@ -95,6 +122,18 @@ function BlogPostContent({ slug }: { slug: string }) {
     // but it's good practice to have a fallback.
     return null; 
   }
+
+  const handleDelete = () => {
+    if (firestore && post) {
+      const postRef = doc(firestore, 'blogPosts', post.id);
+      deleteDocumentNonBlocking(postRef);
+      toast({
+        title: "Post deleted",
+        description: `"${post.title}" has been successfully deleted.`,
+      });
+      router.push("/blog");
+    }
+  };
 
   return (
     <article className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlusCircle, Download } from "lucide-react";
-import { useUser, useCollection, useFirestore, useMemoFirebase, FirestorePermissionError, errorEmitter } from "@/firebase";
+import { useUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, writeBatch, doc } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 import { blogPosts as hardcodedBlogPosts } from "@/lib/data";
@@ -51,13 +51,19 @@ const BlogPage = () => {
     const batch = writeBatch(firestore);
     const postsCollection = collection(firestore, "blogPosts");
     
-    let lastPostForError: any = null;
-
     hardcodedBlogPosts.forEach(post => {
       // Let firestore generate the document ID
       const docRef = doc(postsCollection); 
-      const postData = { ...post };
-      lastPostForError = postData; 
+      // Create a new object with slug at the top level
+      const postData = {
+        slug: post.slug,
+        title: post.title,
+        description: post.description,
+        date: post.date,
+        author: post.author,
+        image: post.image,
+        content: post.content,
+      };
       batch.set(docRef, postData);
     });
 
@@ -69,18 +75,11 @@ const BlogPage = () => {
         });
       })
       .catch((serverError) => {
-        const contextualError = new FirestorePermissionError({
-          path: postsCollection.path,
-          operation: 'write',
-          requestResourceData: lastPostForError,
-        });
-
-        errorEmitter.emit('permission-error', contextualError);
-        
+        console.error("Firestore batch commit error:", serverError);
         toast({
             variant: "destructive",
             title: "Import Failed",
-            description: "You do not have permission to import posts.",
+            description: "You do not have permission to import posts. Check console for details.",
         });
       })
       .finally(() => {
