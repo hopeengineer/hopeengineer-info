@@ -2,8 +2,8 @@
 
 import { notFound, useRouter } from "next/navigation";
 import Image from "next/image";
-import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
+import { doc, query, collection, where, limit } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +28,7 @@ type BlogPostPageProps = {
 };
 
 type BlogPost = {
+    id: string;
     slug: string;
     title: string;
     description: string;
@@ -47,12 +48,13 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   const { isAdmin } = useUser();
   const firestore = useFirestore();
 
-  const postRef = useMemoFirebase(() => {
+  const postQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
-    return doc(firestore, "blogPosts", slug);
+    return query(collection(firestore, "blogPosts"), where("slug", "==", slug), limit(1));
   }, [firestore, slug]);
   
-  const { data: post, isLoading } = useDoc<BlogPost>(postRef);
+  const { data: posts, isLoading } = useCollection<BlogPost>(postQuery);
+  const post = posts?.[0];
 
   if (isLoading) {
     return (
@@ -77,7 +79,8 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const handleDelete = () => {
-    if (postRef) {
+    if (firestore && post) {
+      const postRef = doc(firestore, 'blogPosts', post.id);
       deleteDocumentNonBlocking(postRef);
       toast({
         title: "Post deleted",
