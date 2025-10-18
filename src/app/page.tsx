@@ -50,11 +50,33 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
 
-        <section id="services" className="w-full py-12 md:py-24 lg:py-32 bg-background">
+        <section id="newsletter" className="w-full py-12 md:py-24 lg:py-32 bg-background">
+          <div className="container px-4 md:px-6">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl">Join the Community</h2>
+              <p className="mt-4 text-muted-foreground md:text-xl/relaxed">
+                Get insights on AI, engineering, and growth delivered to your inbox.
+              </p>
+            </div>
+            <div className="mx-auto mt-8 max-w-lg">
+                <iframe 
+                    src="https://hopeengineer.substack.com/embed" 
+                    width="100%" 
+                    height="320" 
+                    style={{border: '1px solid #EEE', background: 'white'}} 
+                    frameBorder="0" 
+                    scrolling="no"
+                ></iframe>
+            </div>
+          </div>
+        </section>
+
+
+        <section id="services" className="w-full py-12 md:py-24 lg:py-32 bg-muted/20">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Our Services</div>
+                <div className="inline-block rounded-lg bg-background px-3 py-1 text-sm">Our Services</div>
                 <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl">Engineering Your Impact</h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   Unlock your potential with my bespoke services, from one-on-one coaching to AI-powered content solutions.
@@ -101,11 +123,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="blog" className="w-full py-12 md:py-24 lg:py-32 bg-muted/20">
+        <section id="blog" className="w-full py-12 md:py-24 lg:py-32 bg-background">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-background px-3 py-1 text-sm">From the Blog</div>
+                <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">From the Blog</div>
                 <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl">Latest Articles</h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   Explore insights on AI, engineering, and personal growth.
