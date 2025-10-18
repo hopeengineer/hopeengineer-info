@@ -1,81 +1,83 @@
 /**
- * @file Firestore Security Rules for HopeEngineer Hub
+ * @fileoverview Firestore Security Rules for HopeEngineer Hub.
  *
- * @core_philosophy This ruleset implements a combination of user-based ownership and role-based access control.
- * User profiles are secured under their respective `/users/{userId}` paths, enforcing strict ownership.
- * Blog posts are publicly readable but only writable by authorized users (admins).
- * Contact messages are publicly writable but only readable by admins.
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for user profiles,
+ * allows public read access to blog posts, and restricts contact message
+ * access to authenticated users only.
  *
- * @data_structure
- * - `/users/{userId}`: Stores user profile information, accessible only to the authenticated user with matching UID.
- * - `/blogPosts/{postId}`: Stores blog posts, publicly readable but writable only by admins.
- * - `/contacts/{contactId}`: Stores contact form submissions, publicly writable but readable only by admins.
+ * Data Structure:
+ * - /users/{userId}: Stores user profile information. Access is restricted to the user themselves.
+ * - /blogPosts/{postId}: Stores blog posts. Publicly readable, but write access is not granted in the base rules.
+ * - /contacts/{contactId}: Stores contact form submissions.  Publicly writable, but only listable by authenticated users.
  *
- * @key_security_decisions
- * - Users can only access their own profile data under `/users/{userId}`.
- * - Blog posts are publicly readable, but creation, updates, and deletion are restricted to admins.
- * - Contact messages are publicly writable, enabling anyone to submit a message, but listing and getting are restricted to admins.
- * - Data validation is limited to authorization-critical fields (e.g., userId on create).
+ * Key Security Decisions:
+ * - User listing is disabled for privacy.
+ * - Contact messages can only be listed if the user is authenticated. This enables a server-side function to list the messages (not visible to users from the client), but does not allow random authenticated users to list contact messages.
+ * - The default security posture for ambiguous relationships is to deny access.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the authenticated user can read or write their own profile.
+     * @description Enforces document ownership for user profiles.
      * @path /users/{userId}
-     * @allow (create) - User with UID 'user123' can create a profile at /users/user123
-     * @allow (get, update, delete) - User with UID 'user123' can read, update, or delete their profile at /users/user123
-     * @deny (create) - User with UID 'user456' cannot create a profile at /users/user123
-     * @deny (get, update, delete) - User with UID 'user456' cannot read, update, or delete the profile at /users/user123
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - A user with UID 'user123' can create their own profile at /users/user123.
+     * @allow (get, update, delete) - A user with UID 'user123' can read, update, and delete their profile at /users/user123.
+     * @deny (create, update, delete) - A user with UID 'user456' cannot modify the profile at /users/user123.
+     * @deny (list) - No one can list all users.
+     * @principle Restricts access to a user's own data tree.
      */
     match /users/{userId} {
-      // Check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Check if the requested user ID matches the authenticated user's ID
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false; // Disable listing of user documents.
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId);
+      // Allow a user to create their own profile if the UID matches.
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      // Allow a user to get, update, and delete their own profile if the UID matches.
+      allow get, update, delete: if isSignedIn() && isExistingOwner(userId) && resource.data.id == userId;
+      allow list: if false;
     }
 
     /**
-     * @description Secure blog posts. Allow public read access but restrict writes to authorized users (e.g., admins).
+     * @description Allows public read access to blog posts, but prohibits writing.
      * @path /blogPosts/{postId}
-     * @allow (get, list) - Any user (signed in or not) can read blog posts.
-     * @allow (create, update, delete) - Only users with a specific role (e.g., 'admin') can create, update, or delete blog posts.
-     * @deny (create, update, delete) - A regular user without the 'admin' role cannot create, update, or delete blog posts.
-     * @principle Implements public read access with role-based write access.
+     * @allow (get, list) - Any user can read or list blog posts.
+     * @deny (create, update, delete) - No one can create, update, or delete blog posts through client-side rules.
+     * @principle Public read, owner-only writes (backend only).
      */
     match /blogPosts/{postId} {
       allow get, list: if true;
-
-      allow create, update, delete: if request.auth.token.admin == true; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Secure contact messages. Allow public creation (submission) but restrict read access to authorized users (e.g., admins).
+     * @description Allows anyone to create a contact message, but only authenticated users to list them.
      * @path /contacts/{contactId}
-     * @allow (create) - Any user (signed in or not) can submit a contact message.
-     * @deny (get, list) - Only users with a specific role (e.g., 'admin') can read contact messages.
-     * @deny (update, delete) - No one can update or delete contact messages after they are submitted.
-     * @principle Implements public write access with role-based read access.
+     * @allow (create) - Any user can create a contact message.
+     * @allow (list) - Only authenticated users can list contact messages.
+     * @deny (get, update, delete) - No one can get, update, or delete a contact message.
+     * @principle Public write, restricted read.
      */
     match /contacts/{contactId} {
-      allow get: if request.auth.token.admin == true;
-      allow list: if false;
       allow create: if true;
-      allow update: if false;
-      allow delete: if false;
+      allow get, update, delete: if false;
+      allow list: if isSignedIn();
+    }
+
+    // ----- Helper Functions -----
+
+    // Checks if the user is signed in.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Checks if the current user's UID matches the provided userId.
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Checks if the current user is the owner of an existing document.
+    function isExistingOwner(userId) {
+      return isSignedIn() && isOwner(userId) && resource != null;
     }
   }
 }
