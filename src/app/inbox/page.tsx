@@ -74,7 +74,7 @@ export default function InboxPage() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-3xl">Inbox</CardTitle>
-          <CardDescription>Messages from the contact form. Unread messages are bold.</CardDescription>
+          <CardDescription>Messages from the contact form. A green dot indicates an unread message.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -89,10 +89,13 @@ export default function InboxPage() {
               {messages.map((msg) => (
                 <AccordionItem key={msg.id} value={msg.id}>
                   <AccordionTrigger>
-                    <div className="flex justify-between w-full pr-4">
-                        <div className="flex flex-col text-left">
-                            <span className={cn("font-semibold", !msg.isRead && "font-bold")}>{msg.name}</span>
-                            <span className="text-sm text-muted-foreground">{msg.service}</span>
+                    <div className="flex justify-between items-center w-full pr-4">
+                        <div className="flex items-center gap-3">
+                           {!msg.isRead && <div className="h-2.5 w-2.5 rounded-full bg-green-500" />}
+                           <div className="flex flex-col text-left">
+                                <span className="font-semibold">{msg.name}</span>
+                                <span className="text-sm text-muted-foreground">{msg.service}</span>
+                           </div>
                         </div>
                         <span className="text-sm text-muted-foreground">
                             {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000)) : ''} ago
