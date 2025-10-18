@@ -33,7 +33,7 @@ export const SOCIAL_LINKS = [
   { name: "Instagram", href: "https://www.instagram.com/hopeengineer", icon: Instagram },
   { name: "Facebook", href: "https://www.facebook.com/thehopeengineer", icon: Facebook },
   { name: "Medium", href: "https://medium.com/@hopeengineer", icon: MediumIcon },
-  { name: "Substack", href: "#", icon: SubstackIcon },
+  { name: "Substack", href: "https://hopeengineer.substack.com/subscribe", icon: SubstackIcon },
   { name: "YouTube", href: "#", icon: Youtube },
 ];
 
@@ -185,3 +185,6 @@ export const testimonials = [
   },
 ];
 
+
+
+    
