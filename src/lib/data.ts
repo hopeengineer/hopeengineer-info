@@ -32,7 +32,7 @@ export const SOCIAL_LINKS = [
   { name: "Threads", href: "https://www.threads.com/@hopeengineer", icon: AtSign },
   { name: "Instagram", href: "https://www.instagram.com/hopeengineer", icon: Instagram },
   { name: "Facebook", href: "https://www.facebook.com/thehopeengineer", icon: Facebook },
-  { name: "Medium", href: "#", icon: MediumIcon },
+  { name: "Medium", href: "https://medium.com/@hopeengineer", icon: MediumIcon },
   { name: "Substack", href: "#", icon: SubstackIcon },
   { name: "YouTube", href: "#", icon: Youtube },
 ];
