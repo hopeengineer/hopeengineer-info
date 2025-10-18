@@ -36,7 +36,7 @@ const Header = () => {
       <div className="container flex h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <LogoIcon className="h-6 w-6 text-primary" />
+            <Code className="h-6 w-6 text-primary" />
             <span className="hidden font-bold sm:inline-block font-headline">
               HopeEngineer Hub
             </span>
@@ -69,7 +69,7 @@ const Header = () => {
               <SheetContent side="left">
                 <div className="flex flex-col space-y-4 p-4">
                   <Link href="/" className="flex items-center space-x-2">
-                     <LogoIcon className="h-6 w-6 text-primary" />
+                     <Code className="h-6 w-6 text-primary" />
                      <span className="font-bold font-headline">HopeEngineer Hub</span>
                   </Link>
                   <nav className="flex flex-col space-y-2">
@@ -91,7 +91,7 @@ const Header = () => {
             </Sheet>
           </div>
           <Link href="/" className="flex items-center space-x-2 md:hidden">
-            <LogoIcon className="h-6 w-6 text-primary" />
+            <Code className="h-6 w-6 text-primary" />
             <span className="font-bold font-headline">HopeEngineer</span>
           </Link>
           <nav className="flex items-center">
