@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, User, LogOut, Code, Inbox, Users } from "lucide-react";
+import { Menu, User, LogOut, Code, Inbox } from "lucide-react";
 import { NAV_LINKS } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
@@ -120,12 +120,6 @@ const Header = () => {
                         <Link href="/inbox">
                           <Inbox className="mr-2 h-4 w-4" />
                           Inbox
-                        </Link>
-                      </DropdownMenuItem>
-                       <DropdownMenuItem asChild>
-                        <Link href="/admin/users">
-                          <Users className="mr-2 h-4 w-4" />
-                          Users
                         </Link>
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
