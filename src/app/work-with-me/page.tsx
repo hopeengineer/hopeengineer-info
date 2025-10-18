@@ -1,11 +1,19 @@
+'use client';
+
+import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { services } from "@/lib/data";
 import Testimonials from "@/components/testimonials";
+import { ContactForm } from "@/components/contact-form";
 
 const WorkWithMePage = () => {
+
+  const scrollToContactForm = () => {
+    document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
   return (
     <div className="container max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <header className="text-center mb-12">
@@ -28,8 +36,8 @@ const WorkWithMePage = () => {
                 <Image
                   src={service.image.imageUrl}
                   alt={service.title}
-                  layout="fill"
-                  objectFit="cover"
+                  fill
+                  style={{objectFit: 'cover'}}
                   className="rounded-t-lg"
                   data-ai-hint={service.image.imageHint}
                 />
@@ -39,10 +47,8 @@ const WorkWithMePage = () => {
                 <CardDescription>{service.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  <Link href="#">
-                    Get Started
-                  </Link>
+                <Button onClick={scrollToContactForm} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                  Get Started
                 </Button>
               </CardContent>
             </Card>
@@ -55,9 +61,13 @@ const WorkWithMePage = () => {
         <p className="text-muted-foreground mb-6 max-w-prose mx-auto">
           If you have a project in mind or want to learn more about my services, don't hesitate to reach out. I'm excited to hear from you.
         </p>
-        <Button size="lg">
+        <Button size="lg" onClick={scrollToContactForm}>
           Contact Me
         </Button>
+      </div>
+      
+      <div className="mt-20">
+        <ContactForm />
       </div>
 
     </div>
