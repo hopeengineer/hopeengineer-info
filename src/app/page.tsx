@@ -60,7 +60,7 @@ export default function Home() {
                 <Card key={service.title} className="transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
                   <CardHeader>
                     <CardTitle className="font-headline">{service.title}</CardTitle>
-                    {service.tagline && <p className="text-sm text-muted-foreground pt-1">{service.tagline}</p>}
+                    {service.tagline && <p className="text-sm text-foreground/90 font-semibold pt-1">{service.tagline}</p>}
                     <CardDescription className="pt-4">
                       {Array.isArray(service.description) ? (
                         <div className="space-y-2">
