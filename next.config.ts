@@ -45,6 +45,12 @@ const nextConfig: NextConfig = {
         hostname: 'miro.medium.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.skool.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

@@ -15,79 +15,79 @@
     {
       "id": "testimonial-2",
       "description": "Second client testimonial screenshot.",
-      "imageUrl": "https://picsum.photos/seed/102/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1758522487305-c6cf8588450a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyZXZpZXclMjBtZXNzYWdlfGVufDB8fHx8MTc2MDc3NTY1NXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "review message"
     },
     {
       "id": "testimonial-3",
       "description": "Third client testimonial screenshot.",
-      "imageUrl": "https://picsum.photos/seed/103/800/600",
+      "imageUrl": "https://images.unsplash.com/photo-1694878981964-c9d8f1ffc19d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmZWVkYmFjayUyMGNoYXR8ZW58MHx8fHwxNzYwNzc1NjU1fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "feedback chat"
     },
     {
       "id": "service-sessions",
       "description": "Image for 1-on-1 sessions service.",
-      "imageUrl": "https://picsum.photos/seed/201/600/400",
+      "imageUrl": "https://images.unsplash.com/photo-1524758870432-af57e54afa26?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjb2FjaGluZyUyMHNlc3Npb258ZW58MHx8fHwxNzYwNzc1NjU1fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "coaching session"
     },
     {
       "id": "service-community",
       "description": "Image for Full Circle (FC) Skool community service.",
-      "imageUrl": "https://picsum.photos/seed/202/600/400",
+      "imageUrl": "https://assets.skool.com/f/1906e28573b54896955792868fa8e1cc/873acfcf54bd461bb8768cc332f6ffc17c8a904ccdfa4e84abe3020c74a1c8d4.png",
       "imageHint": "online community"
     },
     {
       "id": "service-automation",
       "description": "Image for AI content automation services.",
-      "imageUrl": "https://picsum.photos/seed/203/600/400",
+      "imageUrl": "https://images.unsplash.com/photo-1716436329836-208bea5a55e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhaSUyMGF1dG9tYXRpb258ZW58MHx8fHwxNzYwNzc1NjU1fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "ai automation"
     },
     {
       "id": "ai-app-1",
       "description": "Icon for the first AI app.",
-      "imageUrl": "https://picsum.photos/seed/301/500/500",
+      "imageUrl": "https://images.unsplash.com/photo-1730817403166-36f03bec781a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhcHAlMjBpY29ufGVufDB8fHx8MTc2MDc3NTY1NXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "app icon"
     },
     {
       "id": "ai-app-2",
       "description": "Icon for the second AI app.",
-      "imageUrl": "https://picsum.photos/seed/302/500/500",
+      "imageUrl": "https://images.unsplash.com/photo-1661347998996-dcf102498c63?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx0ZWNoJTIwbG9nb3xlbnwwfHx8fDE3NjA3MzA5NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "tech logo"
     },
     {
       "id": "ai-app-3",
       "description": "Icon for the third AI app.",
-      "imageUrl": "https://picsum.photos/seed/303/500/500",
+      "imageUrl": "https://images.unsplash.com/photo-1707061229211-25325f7134ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzb2Z0d2FyZSUyMGljb258ZW58MHx8fHwxNzYwNzc1NjU1fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "software icon"
     },
     {
       "id": "ai-app-4",
       "description": "Icon for the fourth AI app.",
-      "imageUrl": "https://picsum.photos/seed/304/500/500",
+      "imageUrl": "https://images.unsplash.com/photo-1760037028517-e5cc6e3ebd3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGxvZ298ZW58MHx8fHwxNzYwNzMxMTM0fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "abstract logo"
     },
     {
       "id": "blog-1",
       "description": "Image for the first blog post about AI.",
-      "imageUrl": "https://picsum.photos/seed/401/600/400",
+      "imageUrl": "https://images.unsplash.com/photo-1694903089438-bf28d4697d9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YXJ0aWZpY2lhbCUyMGludGVsbGlnZW5jZXxlbnwwfHx8fDE3NjA3MzQ2Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "artificial intelligence"
     },
     {
       "id": "blog-2",
       "description": "Image for the second blog post about engineering.",
-      "imageUrl": "https://picsum.photos/seed/402/600/400",
+      "imageUrl": "https://images.unsplash.com/photo-1580894896813-652ff5aa8146?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c29mdHdhcmUlMjBlbmdpbmVlcmluZ3xlbnwwfHx8fDE3NjA3NzU2NTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "software engineering"
     },
     {
       "id": "blog-3",
       "description": "Image for the third blog post about growth.",
-      "imageUrl": "https://picsum.photos/seed/403/600/400",
+      "imageUrl": "https://images.unsplash.com/photo-1613926161474-fcc7a939e051?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwZXJzb25hbCUyMGdyb3d0aHxlbnwwfHx8fDE3NjA3NzU2NTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "personal growth"
     },
     {
       "id": "blog-4",
       "description": "Image for the fourth blog post about productivity.",
-      "imageUrl": "https://picsum.photos/seed/404/600/400",
+      "imageUrl": "https://images.unsplash.com/photo-1735825764451-d2186b7f4bf9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwcm9kdWN0aXZpdHklMjB0b29sc3xlbnwwfHx8fDE3NjA3NzU2NTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "productivity tools"
     }
   ]
