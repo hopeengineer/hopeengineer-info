@@ -3,94 +3,83 @@
  *
  * Core Philosophy:
  * This ruleset enforces a strict user-ownership model for user profiles,
- * allows public read access to blog posts, and restricts contact message
- * access to authenticated users (intended to be admins).
+ * allows public read access to blog posts, restricts blog post writes to admins,
+ * and allows anyone to create contact messages, but limits access to those messages to admins only.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile data. Access is restricted to the
- *   user with the matching userId.
- * - /blogPosts/{postId}: Stores blog post content. Publicly readable.
- * - /contacts/{contactId}: Stores contact form submissions. Intended to be publicly writable but only readable by admins.
+ * - /users/{userId}: Stores user profile information. Access is restricted to the user themselves.
+ * - /blogPosts/{postId}: Stores blog posts. Publicly readable, but only writable by admins.
+ * - /contacts/{contactId}: Stores contact messages. Publicly writable, but only readable by admins.
  *
  * Key Security Decisions:
- * - User listing is disallowed.
- * - Public read access to blog posts is allowed to facilitate discovery.
- * - The ruleset assumes an "admin" role will be granted to some authenticated users and
- *   uses this to protect contact message access.  A helper function `isAdmin()`
- *   is included as a placeholder and should be updated to reflect how admin
- *   status is determined (e.g., a lookup against a separate collection of admins).
+ * - User listing is explicitly denied.
+ * - Admin role management is not implemented in this prototype, instead all write operations are denied.
+ *
+ * Denormalization for Authorization:
+ *  - No denormalization is explicitly used.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects user profiles. Only the authenticated user can read/write their own profile.
+     * @description Controls access to user profile information.
      * @path /users/{userId}
-     * @allow (create, update, delete) if request.auth.uid == userId
-     * @allow (get, list) if request.auth.uid == userId
-     * @deny (create, update, delete) if request.auth.uid != userId
-     * @deny (get, list) if request.auth.uid != userId
+     * @allow (create) User with matching ID can create their profile.
+     * @allow (get, list, update, delete) User with matching ID can read, update, and delete their profile.
+     * @deny (create) User tries to create a profile with an ID that doesn't match their auth UID.
+     * @deny (get, list, update, delete) User tries to access another user's profile.
      * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      //function isSignedIn() {
-      //  return request.auth != null;
-      //}
+      //Function to check if the user is signed in
+      function isSignedIn() {
+        return request.auth != null;
+      }
 
+      //Function to check if the user id matches the authenticated user's id
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Function to check if the user is the existing owner
+      function isExistingOwner(userId) {
+          return isSignedIn() && request.auth.uid == userId && resource.data != null;
       }
 
       allow get: if isOwner(userId);
-      allow list: if false; // User listing is not permitted for privacy reasons.
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow list: if false; // Listing all users is not permitted
+
+      // Allow the user to create their own document, but no one else's
+      allow create: if isSignedIn() && isOwner(userId);
+
+      allow update: if isExistingOwner(userId);
+
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Allows public read access to blog posts while restricting writes.
+     * @description Controls access to blog post documents.
      * @path /blogPosts/{postId}
-     * @allow (get, list) if true
-     * @allow (create, update, delete) if isAdmin()
-     * @deny (create, update, delete) if !isAdmin()
-     * @principle Allows public read access with admin-only writes.
+     * @allow (get, list) All users can read blog posts.
+     * @deny (create, update, delete) Only admins can modify blog posts.
+     * @principle Public read access with restricted writes.
      */
     match /blogPosts/{postId} {
-      function isAdmin() {
-        // TODO: Implement your admin check logic here.  For prototyping, allow all signed-in users.
-        return request.auth != null; // Placeholder: Replace with actual admin check
-        // Example: return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
-      }
-
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Add admin role check.
     }
 
     /**
-     * @description Allows anyone to create a contact message, but restricts reading to admins.
+     * @description Controls access to contact form submissions.
      * @path /contacts/{contactId}
-     * @allow create if true
-     * @allow (get, list, update, delete) if isAdmin()
-     * @deny (get, list, update, delete) if !isAdmin()
-     * @principle Allows public creation with admin-only access to read, update, and delete operations.
+     * @allow (create) All users can submit contact form messages.
+     * @deny (get, list, update, delete) Only admins can read contact form messages.
+     * @principle Public write access with restricted reads.
      */
     match /contacts/{contactId} {
-      function isAdmin() {
-        // TODO: Implement your admin check logic here. For prototyping, allow all signed-in users.
-        return request.auth != null; // Placeholder: Replace with actual admin check
-        // Example: return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
-      }
-
-      allow get: if isAdmin();
-      allow list: if isAdmin();
       allow create: if true;
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow get, list, update, delete: if false; // TODO: Add admin role check.
     }
   }
 }
