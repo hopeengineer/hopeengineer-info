@@ -99,7 +99,7 @@ export const blogPosts = [
 export const services = [
   {
     title: "1-on-1 Sessions",
-    description: "Personalized coaching sessions to help you navigate your career, overcome challenges, and achieve your goals.",
+    description: "This is a personalized deep dive to design your personal system for growth. We'll engineer a clear, authentic, and powerful plan for your content, growth, and monetization. ✓ Personalized Threads & Content Strategy ✓ Authentic Monetization Framework ✓ Radical Clarity & Actionable Steps",
     image: getImage('service-sessions'),
   },
   {
