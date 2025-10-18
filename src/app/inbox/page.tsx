@@ -4,13 +4,26 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 type ContactMessage = {
   id: string;
@@ -46,18 +59,35 @@ export default function InboxPage() {
   const { data: messages, isLoading } = useCollection<ContactMessage>(messagesQuery);
   
   const handleAccordionChange = (value: string) => {
-    // Value is the ID of the opened message
     if (value && firestore) {
       const message = messages?.find(m => m.id === value);
-      // Only update if it's not already marked as read
       if (message && !message.isRead) {
         const messageRef = doc(firestore, 'contacts', value);
         updateDoc(messageRef, { isRead: true }).catch(err => {
             console.error("Failed to mark message as read:", err);
-            // Optionally, show a toast notification for failure
         });
       }
     }
+  };
+  
+  const handleDelete = (messageId: string) => {
+    if (!firestore) return;
+    const messageRef = doc(firestore, 'contacts', messageId);
+    deleteDoc(messageRef)
+      .then(() => {
+        toast({
+          title: 'Message Deleted',
+          description: 'The message has been permanently removed.',
+        });
+      })
+      .catch((error) => {
+        console.error('Error deleting message:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not delete the message.',
+        });
+      });
   };
 
 
@@ -97,14 +127,42 @@ export default function InboxPage() {
                                 <span className="text-sm text-muted-foreground">{msg.service}</span>
                            </div>
                         </div>
-                        <span className="text-sm text-muted-foreground">
+                         <span className="text-sm text-muted-foreground">
                             {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000)) : ''} ago
                         </span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-2">
+                  <AccordionContent className="space-y-4">
                     <p className="text-sm text-muted-foreground">From: {msg.email}</p>
                     <p className="whitespace-pre-wrap">{msg.message}</p>
+                    <div className="flex justify-end pt-2">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                               <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this message.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(msg.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               ))}
