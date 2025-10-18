@@ -34,7 +34,7 @@ const AboutPage = () => {
         </div>
         <div className="md:col-span-2 space-y-6 text-lg text-foreground/80">
           <p>
-            Hello! I'm the HopeEngineer. My journey is one of passion for technology and a deep-seated belief in human potential. I started this platform as a way to merge my love for engineering with my desire to inspire hope and drive positive change.
+            Hello! I'm Sameera aka hopeengineer. My journey is one of passion for technology and a deep-seated belief in human potential. I started this platform as a way to merge my love for engineering with my desire to inspire hope and drive positive change.
           </p>
           <p>
             With a background in software engineering and a fascination with artificial intelligence, I've spent years building complex systems and solving intricate problems. However, I realized that the most powerful systems we can build are not just made of code, but of people, ideas, and shared aspirations.
@@ -65,7 +65,7 @@ const AboutPage = () => {
             </div>
             <div className="pt-4">
               <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Link href="mailto:contact@hopeengineer.com">
+                <Link href="mailto:csoft.sameera@gmail.com">
                   Send me an Email
                 </Link>
               </Button>
