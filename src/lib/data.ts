@@ -34,7 +34,7 @@ export const SOCIAL_LINKS = [
   { name: "Facebook", href: "https://www.facebook.com/thehopeengineer", icon: Facebook },
   { name: "Medium", href: "https://medium.com/@hopeengineer", icon: MediumIcon },
   { name: "Substack", href: "https://hopeengineer.substack.com/subscribe", icon: SubstackIcon },
-  { name: "YouTube", href: "#", icon: Youtube },
+  { name: "YouTube", href: "https://www.youtube.com/@hopeengineer", icon: Youtube },
 ];
 
 export const blogPosts = [
