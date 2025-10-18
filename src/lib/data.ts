@@ -120,7 +120,7 @@ export const services = [
     image: getImage('service-community'),
   },
   {
-    title: "AI Content Automation",
+    title: "AI Automation",
     description: "Leverage the power of AI to automate your content creation, from blog posts to social media updates.",
     image: getImage('service-automation'),
   },
