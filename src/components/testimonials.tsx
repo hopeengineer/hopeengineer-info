@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { testimonials as initialTestimonials } from "@/lib/data";
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // Define the shape of a testimonial item including its position and rotation
 type TestimonialItem = (typeof initialTestimonials)[0] & {
@@ -163,6 +163,8 @@ const Testimonials = () => {
       
       <Dialog open={!!zoomedImage} onOpenChange={(isOpen) => !isOpen && setZoomedImage(null)}>
         <DialogContent className="p-0 border-0 max-w-4xl bg-transparent shadow-none">
+            <DialogTitle className="sr-only">Zoomed Testimonial</DialogTitle>
+            <DialogDescription className="sr-only">A larger view of the selected testimonial screenshot.</DialogDescription>
             {zoomedImage && (
                 <Image
                     src={zoomedImage}
@@ -180,5 +182,7 @@ const Testimonials = () => {
 };
 
 export default Testimonials;
+
+    
 
     
