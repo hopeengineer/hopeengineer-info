@@ -1,8 +1,10 @@
 
+
 'use client';
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { services } from "@/lib/data";
@@ -59,9 +61,17 @@ const WorkWithMePage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={scrollToContactForm} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  Get Started
-                </Button>
+                {service.externalUrl ? (
+                  <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <Link href={service.externalUrl} target="_blank" rel="noopener noreferrer">
+                      Get Started
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button onClick={scrollToContactForm} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                    Get Started
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -87,3 +97,4 @@ const WorkWithMePage = () => {
 };
 
 export default WorkWithMePage;
+
