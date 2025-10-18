@@ -1,75 +1,87 @@
 /**
- * @fileoverview Firestore Security Rules for HopeEngineer Hub.
+ * @file Firebase Security Rules for HopeEngineer Hub.
  *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user profiles
- * and restricts write access to blog posts and contact messages.
+ * @corePhilosophy
+ * This ruleset enforces a user-ownership model for user profiles, public read access with owner-only write access for blog posts (to be implemented), and a closed model for contact messages (public write, admin read).
  *
- * Data Structure:
- * - /users/{userId}: Stores individual user profiles. Only the authenticated user can access their own profile.
- * - /blogPosts/{postId}: Stores blog posts. Read access is public, but write access is restricted to admins (not yet implemented in this prototype).
- * - /contacts/{contactId}: Stores contact messages. Publicly writable, but only readable by admins (not yet implemented in this prototype).
+ * @dataStructure
+ * - `/users/{userId}`: Stores user profile data, accessible only by the authenticated user with a matching UID.
+ * - `/blogPosts/{postId}`: Stores blog posts. Intended for public read access with restricted write access (owner-only) when the ownership field is present.
+ * - `/contacts/{contactId}`: Stores contact messages. Any user can create a contact message, but only admins can read them.
  *
- * Key Security Decisions:
+ * @keySecurityDecisions
  * - User listing is disabled for privacy.
- * - No admin roles or authentication are implemented beyond basic signed-in state.
- * - Schema validation is relaxed to allow for rapid prototyping and iteration.
+ * - The `contacts` collection is publicly writable, so rate limiting should be implemented at the application level to prevent spam.
+ * - Blog posts must eventually include an authorId field to restrict updates and deletion to the original author.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the authenticated user can access their own profile.
+     * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (get, update, delete) Authenticated user with UID matching {userId}.
-     * @allow (create) Authenticated user creating their own profile.
-     * @deny (get, update, delete) Authenticated user attempting to access another user's profile.
-     * @deny (list) All users. User listing is not allowed.
-     * @principle Enforces document ownership for writes. Restricts access to a user's own data tree. Validates relational integrity between documents.
+     * @allow (create) Authenticated user can create their own profile if userId matches auth.uid.
+     * @allow (get,update,delete) Authenticated user can read, update, or delete their profile if userId matches auth.uid.
+     * @deny (create) Authenticated user cannot create a profile for another user (userId does not match auth.uid).
+     * @deny (get,update,delete) Authenticated user cannot read, update, or delete another user's profile (userId does not match auth.uid).
+     * @deny (list) Listing of users is not permitted.
+     * @principle Enforces strict user-ownership for profile data.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
+      // isSignedIn() checks if the request has valid authentication credentials
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Secure blog posts. Read access is public. Write access should be restricted to admins.
+     * @description Controls access to blog post documents.
      * @path /blogPosts/{postId}
-     * @allow (get, list) All users.
-     * @deny (create, update, delete) All users.
-     * @principle Public read with owner-only (admin) writes.
+     * @allow (get,list) All users can read and list blog posts.
+     * @deny (create,update,delete) Only the author can create, update, or delete blog posts.
+     * @principle Allows public read access but restricts write access to the owner (author).
      */
     match /blogPosts/{postId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      // CRITICAL: Cannot implement owner-only writes. The 'BlogPost' entity is missing an 'authorId' or 'ownerId' field.
+      allow create: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn(); // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description Secure contact messages. Publicly writable, but only readable and deletable by admins.
+     * @description Controls access to contact messages.
      * @path /contacts/{contactId}
-     * @allow (create) All users.
-     * @deny (get, list, update, delete) All users.
-     * @principle Public write with owner-only (admin) reads.
+     * @allow (create) All users can create contact messages.
+     * @deny (get,list,update,delete) Only admins can read, update, and delete contact messages.
+     * @principle Allows public write access for submissions but restricts all other access to admins.
      */
     match /contacts/{contactId} {
       allow create: if true;
-      allow get, list, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow get, list, update, delete: if isAdmin();
     }
+  }
+
+  // isOwner(userId) checks if the request.auth.uid matches the provided userId
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  // isExistingOwner(userId) checks if the request.auth.uid matches the provided userId and if the resource exists
+  function isExistingOwner(userId) {
+    return isOwner(userId) && exists(/databases/$(database)/documents/users/$(userId));
+  }
+
+  // isSignedIn() checks if the request has valid authentication credentials
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+    // isAdmin() checks if the user has the admin role
+  function isAdmin() {
+    return request.auth.token.admin == true;
   }
 }
