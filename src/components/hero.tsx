@@ -21,7 +21,7 @@ const Hero = () => {
                         alt="A portrait of HopeEngineer"
                         width={128}
                         height={128}
-                        className="rounded-full object-cover aspect-square border-4 border-primary shadow-lg mb-4"
+                        className="rounded-full object-cover aspect-square shadow-lg mb-4"
                         data-ai-hint={heroImage.imageHint}
                         priority
                     />
