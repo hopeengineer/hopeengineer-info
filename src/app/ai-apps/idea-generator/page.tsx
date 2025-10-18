@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -9,11 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { generateIdeas, GenerateIdeasInputSchema, GenerateIdeasOutput } from '@/ai/flows/idea-generator-flow';
+import { generateIdeas, type GenerateIdeasOutput } from '@/ai/flows/idea-generator-flow';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type IdeaGeneratorForm = z.infer<typeof GenerateIdeasInputSchema>;
+// Define the schema for the form directly in the component.
+const IdeaGeneratorInputSchema = z.object({
+  topic: z.string().min(1, 'Please enter a topic to generate ideas.'),
+});
+
+type IdeaGeneratorForm = z.infer<typeof IdeaGeneratorInputSchema>;
 
 export default function IdeaGeneratorPage() {
   const { toast } = useToast();
@@ -21,7 +27,7 @@ export default function IdeaGeneratorPage() {
   const [generatedIdeas, setGeneratedIdeas] = useState<GenerateIdeasOutput | null>(null);
 
   const form = useForm<IdeaGeneratorForm>({
-    resolver: zodResolver(GenerateIdeasInputSchema),
+    resolver: zodResolver(IdeaGeneratorInputSchema),
     defaultValues: {
       topic: '',
     },
@@ -31,7 +37,7 @@ export default function IdeaGeneratorPage() {
     setIsGenerating(true);
     setGeneratedIdeas(null);
     try {
-      const result = await generateIdeas(data);
+      const result = await generateIdeas({ topic: data.topic });
       setGeneratedIdeas(result);
     } catch (error) {
       console.error("Error generating ideas:", error);

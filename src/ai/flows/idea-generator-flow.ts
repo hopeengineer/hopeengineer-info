@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow for generating creative ideas.
@@ -10,17 +11,25 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const GenerateIdeasInputSchema = z.object({
-  topic: z.string().describe('The topic to generate ideas for.'),
-});
-export type GenerateIdeasInput = z.infer<typeof GenerateIdeasInputSchema>;
+// Input and Output types are defined but the schemas are used inline
+export type GenerateIdeasInput = {
+  topic: string;
+};
 
-const GenerateIdeasOutputSchema = z.object({
-  ideas: z.array(z.string()).describe('A list of generated ideas.'),
-});
-export type GenerateIdeasOutput = z.infer<typeof GenerateIdeasOutputSchema>;
+export type GenerateIdeasOutput = {
+  ideas: string[];
+};
 
 export async function generateIdeas(input: GenerateIdeasInput): Promise<GenerateIdeasOutput> {
+  // Define Schemas inside the function
+  const GenerateIdeasInputSchema = z.object({
+    topic: z.string().describe('The topic to generate ideas for.'),
+  });
+
+  const GenerateIdeasOutputSchema = z.object({
+    ideas: z.array(z.string()).describe('A list of generated ideas.'),
+  });
+
   const ideaGeneratorPrompt = ai.definePrompt({
     name: 'ideaGeneratorPrompt',
     input: { schema: GenerateIdeasInputSchema },
@@ -39,8 +48,8 @@ export async function generateIdeas(input: GenerateIdeasInput): Promise<Generate
       inputSchema: GenerateIdeasInputSchema,
       outputSchema: GenerateIdeasOutputSchema,
     },
-    async (input) => {
-      const { output } = await ideaGeneratorPrompt(input);
+    async (flowInput) => {
+      const { output } = await ideaGeneratorPrompt(flowInput);
       if (!output) {
         throw new Error('AI failed to generate ideas.');
       }
