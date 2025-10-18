@@ -110,6 +110,7 @@ export const services = [
   },
   {
     title: "Full Circle ⭕",
+    tagline: "Where community becomes the engine for your impact",
     description: "Join a thriving community of like-minded engineers and creators for collaborative learning and growth.",
     image: getImage('service-community'),
   },
