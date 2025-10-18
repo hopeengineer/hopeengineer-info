@@ -9,20 +9,38 @@
     {
       "id": "testimonial-1",
       "description": "First client testimonial screenshot.",
-      "imageUrl": "https://picsum.photos/seed/101/800/600",
+      "imageUrl": "https://i.imgur.com/dl1W8H7.png",
       "imageHint": "testimonial screenshot"
     },
     {
       "id": "testimonial-2",
       "description": "Second client testimonial screenshot.",
-      "imageUrl": "https://images.unsplash.com/photo-1758522487305-c6cf8588450a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyZXZpZXclMjBtZXNzYWdlfGVufDB8fHx8MTc2MDc3NTY1NXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "review message"
+      "imageUrl": "https://i.imgur.com/h25u7Xk.png",
+      "imageHint": "testimonial screenshot"
     },
     {
       "id": "testimonial-3",
       "description": "Third client testimonial screenshot.",
-      "imageUrl": "https://images.unsplash.com/photo-1694878981964-c9d8f1ffc19d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmZWVkYmFjayUyMGNoYXR8ZW58MHx8fHwxNzYwNzc1NjU1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "feedback chat"
+      "imageUrl": "https://i.imgur.com/8WAnjRl.png",
+      "imageHint": "testimonial screenshot"
+    },
+    {
+      "id": "testimonial-4",
+      "description": "Fourth client testimonial screenshot.",
+      "imageUrl": "https://i.imgur.com/8o2Cq7g.png",
+      "imageHint": "testimonial screenshot"
+    },
+    {
+      "id": "testimonial-5",
+      "description": "Fifth client testimonial screenshot.",
+      "imageUrl": "https://i.imgur.com/T46ldos.png",
+      "imageHint": "testimonial screenshot"
+    },
+    {
+      "id": "testimonial-6",
+      "description": "Sixth client testimonial screenshot.",
+      "imageUrl": "https://i.imgur.com/jgDYHgT.png",
+      "imageHint": "testimonial screenshot"
     },
     {
       "id": "service-sessions",

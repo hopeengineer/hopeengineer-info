@@ -172,19 +172,37 @@ export const testimonials = [
   {
     id: 1,
     name: "Client A",
-    text: "Working with HopeEngineer was a game-changer for my career.",
+    text: "Testimonial 1",
     image: getImage('testimonial-1'),
   },
   {
     id: 2,
     name: "Client B",
-    text: "The insights from the 1-on-1 sessions were invaluable. Highly recommended!",
+    text: "Testimonial 2",
     image: getImage('testimonial-2'),
   },
   {
     id: 3,
     name: "Client C",
-    text: "The AI automation service saved me countless hours. It's like having a superpower.",
+    text: "Testimonial 3",
     image: getImage('testimonial-3'),
+  },
+  {
+    id: 4,
+    name: "Client D",
+    text: "Testimonial 4",
+    image: getImage('testimonial-4'),
+  },
+  {
+    id: 5,
+    name: "Client E",
+    text: "Testimonial 5",
+    image: getImage('testimonial-5'),
+  },
+  {
+    id: 6,
+    name: "Client F",
+    text: "Testimonial 6",
+    image: getImage('testimonial-6'),
   },
 ];
