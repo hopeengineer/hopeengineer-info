@@ -146,7 +146,7 @@ export const aiApps = [
     title: "AI Idea Generator",
     description: "Stuck in a rut? Generate innovative ideas for your next project, blog post, or business venture.",
     image: getImage('ai-app-1'),
-    href: "#"
+    href: "/ai-apps/idea-generator"
   },
   {
     title: "Automated Code Documenter",
