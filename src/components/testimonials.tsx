@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -5,6 +6,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { testimonials as initialTestimonials } from "@/lib/data";
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 // Define the shape of a testimonial item including its position and rotation
 type TestimonialItem = (typeof initialTestimonials)[0] & {
@@ -24,6 +26,7 @@ type DragState = {
 const Testimonials = () => {
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
   const [dragState, setDragState] = useState<DragState>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
 
   // This effect runs only once on the client to set the initial random positions
@@ -53,7 +56,10 @@ const Testimonials = () => {
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, id: number) => {
+    // Prevent default drag behavior to avoid conflicts
+    if (e.button !== 0) return; // Only allow left-clicks
     e.preventDefault();
+    
     const testimonial = testimonials.find(t => t.id === id);
     if (!testimonial) return;
 
@@ -93,6 +99,11 @@ const Testimonials = () => {
   const handleMouseLeave = () => {
     setDragState(null);
   };
+  
+  const handleDoubleClick = (imageUrl: string) => {
+    setZoomedImage(imageUrl);
+  };
+
 
   return (
     <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32 bg-background">
@@ -109,7 +120,7 @@ const Testimonials = () => {
         
         <div 
             ref={boardRef}
-            className="relative w-full h-[600px] mt-12 cursor-grab"
+            className="relative w-full h-[600px] mt-12 cursor-grab active:cursor-grabbing"
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
@@ -126,6 +137,7 @@ const Testimonials = () => {
                         userSelect: 'none',
                     }}
                     onMouseDown={(e) => handleMouseDown(e, testimonial.id)}
+                    onDoubleClick={() => handleDoubleClick(testimonial.image.imageUrl)}
                 >
                     <Card className={cn(
                         "overflow-hidden shadow-2xl w-[300px] aspect-4/3",
@@ -148,8 +160,25 @@ const Testimonials = () => {
             ))}
         </div>
       </div>
+      
+      <Dialog open={!!zoomedImage} onOpenChange={(isOpen) => !isOpen && setZoomedImage(null)}>
+        <DialogContent className="p-0 border-0 max-w-4xl bg-transparent shadow-none">
+            {zoomedImage && (
+                <Image
+                    src={zoomedImage}
+                    alt="Zoomed testimonial"
+                    width={1600}
+                    height={1200}
+                    className="w-full h-auto object-contain rounded-lg"
+                />
+            )}
+        </DialogContent>
+      </Dialog>
+
     </section>
   );
 };
 
 export default Testimonials;
+
+    
