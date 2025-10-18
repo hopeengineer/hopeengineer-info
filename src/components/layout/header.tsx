@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Code, User, LogOut } from "lucide-react";
+import { Menu, User, LogOut } from "lucide-react";
 import { NAV_LINKS } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { useAuth, useUser } from "@/firebase";
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getAuth } from "firebase/auth";
+import { LogoIcon } from "@/components/icons";
 
 const Header = () => {
   const pathname = usePathname();
@@ -34,7 +35,7 @@ const Header = () => {
       <div className="container flex h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Code className="h-6 w-6 text-primary" />
+            <LogoIcon className="h-6 w-6 text-primary" />
             <span className="hidden font-bold sm:inline-block font-headline">
               HopeEngineer Hub
             </span>
@@ -67,7 +68,7 @@ const Header = () => {
               <SheetContent side="left">
                 <div className="flex flex-col space-y-4 p-4">
                   <Link href="/" className="flex items-center space-x-2">
-                     <Code className="h-6 w-6 text-primary" />
+                     <LogoIcon className="h-6 w-6 text-primary" />
                      <span className="font-bold font-headline">HopeEngineer Hub</span>
                   </Link>
                   <nav className="flex flex-col space-y-2">
@@ -89,7 +90,7 @@ const Header = () => {
             </Sheet>
           </div>
           <Link href="/" className="flex items-center space-x-2 md:hidden">
-            <Code className="h-6 w-6 text-primary" />
+            <LogoIcon className="h-6 w-6 text-primary" />
             <span className="font-bold font-headline">HopeEngineer</span>
           </Link>
           <nav className="flex items-center">
