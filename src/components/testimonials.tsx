@@ -113,7 +113,10 @@ const Testimonials = () => {
             <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Testimonials</div>
             <h2 className="text-3xl font-headline font-bold">What My Clients Say</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Authentic feedback from people who have transformed their work and life with my help. (Click and drag the notes, or double-click to zoom!)
+              Authentic feedback from people who have transformed their work and life with my help.
+            </p>
+            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              (Click and drag the notes, or double-click to zoom!)
             </p>
           </div>
         </div>
@@ -182,7 +185,3 @@ const Testimonials = () => {
 };
 
 export default Testimonials;
-
-    
-
-    
