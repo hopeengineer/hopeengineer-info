@@ -103,6 +103,7 @@ export const blogPosts = [
 
 export const services = [
   {
+    id: "1-on-1",
     title: "1-on-1 Sessions",
     tagline: "Your vision, amplified with human-first strategy",
     description: [
@@ -114,6 +115,7 @@ export const services = [
     image: getImage('service-sessions'),
   },
   {
+    id: "full-circle",
     title: "Full Circle ⭕",
     tagline: "Where community becomes the engine for your impact",
     description: [
@@ -126,13 +128,14 @@ export const services = [
     externalUrl: "https://www.skool.com/fullcircle/about?ref=36dd7937f1d147e08aecf5a3e8dcdbb9",
   },
   {
+    id: "ai-automation",
     title: "AI Automation",
     tagline: "Build your legacy, not your workload",
     description: [
-        "I build and train personalized AI systems to automate your impact. From content and newsletters to high-conversion DMs, I use proven, high-quality data to give you back your time.",
-        "✓ Bespoke Content & Lead Gen Workflows",
-        "✓ High-Conversion Email & DM Automation",
-        "✓ Trained On Your Unique, Proven Data"
+      "I build and train personalized AI systems to automate your impact. From content and newsletters to high-conversion DMs, I use proven, high-quality data to give you back your time.",
+      "✓ Bespoke Content & Lead Gen Workflows",
+      "✓ High-Conversion Email & DM Automation",
+      "✓ Trained On Your Unique, Proven Data"
     ],
     image: getImage('service-automation'),
   },
@@ -185,7 +188,3 @@ export const testimonials = [
     image: getImage('testimonial-3'),
   },
 ];
-
-
-
-    

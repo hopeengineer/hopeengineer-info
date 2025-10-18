@@ -2,7 +2,7 @@
 
 'use client';
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { services } from "@/lib/data";
 import Testimonials from "@/components/testimonials";
 import { ContactForm } from "@/components/contact-form";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowRight } from "lucide-react";
 
 const WorkWithMePage = () => {
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   const scrollToContactForm = () => {
     document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
   };
   
+  const handleCustomAutomationClick = () => {
+    setIsAiDialogOpen(false);
+    // Use a timeout to ensure the dialog has closed before scrolling
+    setTimeout(() => {
+      scrollToContactForm();
+    }, 100);
+  };
+
   return (
     <div className="container max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <header className="text-center mb-12">
@@ -61,7 +72,39 @@ const WorkWithMePage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {service.externalUrl ? (
+                {service.id === 'ai-automation' ? (
+                   <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                        Get Started
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl">AI Automation Inquiry</DialogTitle>
+                        <DialogDescription>
+                          Choose an option below to get started with AI.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="py-4 space-y-4">
+                         <p>
+                          For a personalized AI solution tailored to your needs, send me a message and we can design it together.
+                        </p>
+                        <Button onClick={handleCustomAutomationClick} className="w-full">
+                          Request Custom Automation
+                        </Button>
+                        <p className="pt-4">
+                          Or, feel free to try out some of the AI applications I've already built.
+                        </p>
+                        <Button variant="outline" asChild className="w-full">
+                           <Link href="/ai-apps">
+                            Explore AI Apps <ArrowRight className="ml-2 h-4 w-4" />
+                           </Link>
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                ) : service.externalUrl ? (
                   <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                     <Link href={service.externalUrl} target="_blank" rel="noopener noreferrer">
                       Get Started
@@ -97,4 +140,3 @@ const WorkWithMePage = () => {
 };
 
 export default WorkWithMePage;
-
