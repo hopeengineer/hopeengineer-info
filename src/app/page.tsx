@@ -11,6 +11,7 @@ import { ArrowRight } from "lucide-react";
 import { useCollection, publicFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
 
 type BlogPost = {
     id: string;
@@ -28,6 +29,7 @@ type BlogPost = {
 export default function Home() {
   // Use the public, read-only firestore instance. This ensures blog posts are always visible.
   const firestore = publicFirestore;
+  const router = useRouter();
 
   const latestPostsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -35,6 +37,13 @@ export default function Home() {
   }, [firestore]);
 
   const { data: latestPosts, isLoading } = useCollection<BlogPost>(latestPostsQuery);
+  
+  const handleServiceClick = (service: (typeof services)[0]) => {
+    if (service.externalUrl) {
+      window.open(service.externalUrl, '_blank');
+    }
+    router.push('/work-with-me');
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -74,11 +83,17 @@ export default function Home() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Link href="/work-with-me">
-                      <Button className="w-full">
+                     {service.externalUrl ? (
+                      <Button className="w-full" onClick={() => handleServiceClick(service)}>
                         Learn More <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
-                    </Link>
+                    ) : (
+                       <Link href="/work-with-me">
+                        <Button className="w-full">
+                          Learn More <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
                   </CardContent>
                 </Card>
               ))}

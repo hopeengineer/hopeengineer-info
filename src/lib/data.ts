@@ -123,6 +123,7 @@ export const services = [
       "✓ Systems for Co-Growth & Monetization",
     ],
     image: getImage('service-community'),
+    externalUrl: "https://www.skool.com/fullcircle/about?ref=36dd7937f1d147e08aecf5a3e8dcdbb9",
   },
   {
     title: "AI Automation",
