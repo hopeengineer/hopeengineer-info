@@ -99,6 +99,7 @@ export const blogPosts = [
 export const services = [
   {
     title: "1-on-1 Sessions",
+    tagline: "Your vision, amplified with human-first strategy.",
     description: [
       "This is a 1-on-1 deep dive to design your personal system for growth. We'll engineer a clear, authentic, and powerful plan for your content, growth, and monetization.",
       "✓ Personalized Threads & Content Strategy",

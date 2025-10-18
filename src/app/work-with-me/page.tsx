@@ -45,7 +45,8 @@ const WorkWithMePage = () => {
               </div>
               <CardHeader className="flex-1">
                 <CardTitle className="font-headline text-2xl">{service.title}</CardTitle>
-                <CardDescription>
+                {service.tagline && <p className="text-sm text-muted-foreground pt-1">{service.tagline}</p>}
+                <CardDescription className="pt-4">
                   {Array.isArray(service.description) ? (
                     <div className="space-y-2">
                       {service.description.map((line, index) => (
