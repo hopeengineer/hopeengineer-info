@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -52,7 +53,7 @@ const CountdownPopup = () => {
           <Rocket className="h-12 w-12 text-accent" />
           <DialogTitle className="font-headline text-3xl">Get Ready!</DialogTitle>
           <DialogDescription className="text-lg">
-            A new collection of AI Apps is launching soon.
+            This new collection of AI Apps is launching soon.
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center space-x-4 text-center">
