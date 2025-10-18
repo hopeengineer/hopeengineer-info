@@ -122,7 +122,12 @@ export const services = [
   {
     title: "AI Automation",
     tagline: "Build your legacy, not your workload",
-    description: "Leverage the power of AI to automate your content creation, from blog posts to social media updates.",
+    description: [
+        "I build and train personalized AI systems to automate your impact. From content and newsletters to high-conversion DMs, I use proven, high-quality data to give you back your time.",
+        "✓ Bespoke Content & Lead Gen Workflows",
+        "✓ High-Conversion Email & DM Automation",
+        "✓ Trained On Your Unique, Proven Data"
+    ],
     image: getImage('service-automation'),
   },
 ];
