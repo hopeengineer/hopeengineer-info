@@ -31,10 +31,9 @@ type BlogPost = {
 }
 
 const BlogPage = () => {
-  const { user, isAdmin, isUserLoading } = useUser();
-  // Conditionally get the authenticated firestore instance ONLY if the user is logged in.
-  // This prevents the useFirestore() hook from throwing an error for logged-out users.
-  const loggedInFirestore = user ? useFirestore() : null;
+  const { isAdmin, isUserLoading } = useUser();
+  // All hooks must be called unconditionally at the top level.
+  const loggedInFirestore = useFirestore(); // This hook might throw if user is not authenticated.
   const router = useRouter();
   const { toast } = useToast();
 
@@ -42,8 +41,8 @@ const BlogPage = () => {
   const [importHtml, setImportHtml] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  // If the user is logged in, use their dedicated instance. Otherwise, use the public one.
-  const firestore = useMemo(() => loggedInFirestore || publicFirestore, [loggedInFirestore]);
+  // Use the public instance for everyone, and the admin instance for mutations later.
+  const firestore = publicFirestore;
   
   const postsQuery = useMemoFirebase(() => {
     // The query will be null until `firestore` is available.
@@ -55,11 +54,12 @@ const BlogPage = () => {
   const { data: blogPosts, isLoading: isPostsLoading } = useCollection<BlogPost>(postsQuery);
 
   const handleImport = async () => {
-    // Import requires an authenticated admin, so we must use loggedInFirestore
-    if (!importHtml || !loggedInFirestore) {
+    // Import requires an authenticated admin, so we use loggedInFirestore which was fetched earlier.
+    // We also check for isAdmin status.
+    if (!importHtml || !isAdmin || !loggedInFirestore) {
         toast({
             variant: "destructive",
-            title: "HTML is missing or you are not logged in.",
+            title: "HTML is missing or you are not an authorized admin.",
             description: "Please paste the article's HTML content to import.",
         });
         return;
