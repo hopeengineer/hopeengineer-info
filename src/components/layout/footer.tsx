@@ -17,7 +17,7 @@ const Footer = () => {
         </div>
         <div className="flex items-center space-x-2">
           {SOCIAL_LINKS.map((social) => (
-            <Link key={social.name} href={social.href}>
+            <Link key={social.name} href={social.href} target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="icon" aria-label={social.name}>
                 <social.icon className="h-5 w-5" />
               </Button>
