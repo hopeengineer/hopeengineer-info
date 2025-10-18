@@ -146,25 +146,33 @@ export const aiApps = [
     title: "AI Idea Generator",
     description: "Stuck in a rut? Generate innovative ideas for your next project, blog post, or business venture.",
     image: getImage('ai-app-1'),
-    href: "/ai-apps/idea-generator"
+    href: "/ai-apps/idea-generator",
+    status: 'Available',
+    badge: 'Free',
   },
   {
     title: "Automated Code Documenter",
     description: "Automatically generate clear and concise documentation for your codebases, saving you hours of work.",
     image: getImage('ai-app-2'),
-    href: "#"
+    href: "#",
+    status: 'Coming Soon',
+    badge: 'Coming Soon',
   },
   {
     title: "Social Media Post Crafter",
     description: "Create engaging and platform-optimized social media posts in seconds with our AI-powered writer.",
     image: getImage('ai-app-3'),
-    href: "#"
+    href: "#",
+    status: 'Coming Soon',
+    badge: 'Coming Soon',
   },
   {
     title: "Personalized Learning Path AI",
     description: "Get a custom-tailored learning path to acquire new skills, complete with resources and project ideas.",
     image: getImage('ai-app-4'),
-    href: "#"
+    href: "#",
+    status: 'Coming Soon',
+    badge: 'Coming Soon',
   },
 ];
 

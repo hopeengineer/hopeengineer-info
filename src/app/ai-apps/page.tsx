@@ -8,6 +8,8 @@ import { aiApps } from "@/lib/data";
 import { ArrowUpRight } from "lucide-react";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import CountdownPopup from "@/components/CountdownPopup";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const AiAppsPage = () => {
   return (
@@ -27,32 +29,53 @@ const AiAppsPage = () => {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {aiApps.map((app) => (
-            <Card key={app.title} className="flex flex-col transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-accent/20 bg-background/80 backdrop-blur-sm">
-              <CardHeader className="flex-row items-center gap-4">
-                <Image 
-                  src={app.image.imageUrl}
-                  alt={`${app.title} icon`}
-                  width={56}
-                  height={56}
-                  className="rounded-lg border-2 border-border"
-                  data-ai-hint={app.image.imageHint}
-                />
-                <div className="flex-1">
-                  <CardTitle className="font-headline text-xl">{app.title}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <CardDescription className="flex-1">{app.description}</CardDescription>
-                <Button asChild variant="outline" className="mt-4 w-full">
-                  <Link href={app.href}>
-                    Launch App
-                    <ArrowUpRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          {aiApps.map((app) => {
+            const isAvailable = app.status === 'Available';
+            return (
+              <Card 
+                key={app.title} 
+                className={cn(
+                  "flex flex-col transform transition-all duration-300 bg-background/80 backdrop-blur-sm",
+                  isAvailable ? "hover:scale-105 hover:shadow-2xl hover:shadow-accent/20" : "opacity-60 cursor-not-allowed"
+                )}
+              >
+                <CardHeader className="flex-row items-start gap-4">
+                  <Image 
+                    src={app.image.imageUrl}
+                    alt={`${app.title} icon`}
+                    width={56}
+                    height={56}
+                    className="rounded-lg border-2 border-border"
+                    data-ai-hint={app.image.imageHint}
+                  />
+                  <div className="flex-1">
+                    <CardTitle className="font-headline text-xl">{app.title}</CardTitle>
+                  </div>
+                   {app.badge && (
+                      <Badge variant={isAvailable ? 'default' : 'secondary'} className={cn(isAvailable && "bg-accent text-accent-foreground")}>
+                          {app.badge}
+                      </Badge>
+                  )}
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col">
+                  <CardDescription className="flex-1">{app.description}</CardDescription>
+                  <Button asChild variant="outline" className="mt-4 w-full" disabled={!isAvailable}>
+                    {isAvailable ? (
+                      <Link href={app.href}>
+                        Launch App
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <span>
+                        Launch App
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </span>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>
