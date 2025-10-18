@@ -1,6 +1,5 @@
 
 import { ImageResponse } from 'next/og';
-import { Code } from 'lucide-react';
 
 export const size = {
   width: 32,
