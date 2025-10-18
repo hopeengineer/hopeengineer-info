@@ -1,5 +1,7 @@
 
-import { Facebook, Instagram, AtSign, Inbox } from "lucide-react";
+
+import { Facebook, Instagram, AtSign, Youtube } from "lucide-react";
+import { MediumIcon, SubstackIcon } from "@/components/icons";
 import type { ImagePlaceholder } from './placeholder-images';
 import { PlaceHolderImages } from './placeholder-images';
 
@@ -30,6 +32,9 @@ export const SOCIAL_LINKS = [
   { name: "Threads", href: "https://www.threads.com/@hopeengineer", icon: AtSign },
   { name: "Instagram", href: "https://www.instagram.com/hopeengineer", icon: Instagram },
   { name: "Facebook", href: "https://www.facebook.com/thehopeengineer", icon: Facebook },
+  { name: "Medium", href: "#", icon: MediumIcon },
+  { name: "Substack", href: "#", icon: SubstackIcon },
+  { name: "YouTube", href: "#", icon: Youtube },
 ];
 
 export const blogPosts = [
@@ -179,3 +184,4 @@ export const testimonials = [
     image: getImage('testimonial-3'),
   },
 ];
+
