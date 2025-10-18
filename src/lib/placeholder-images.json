@@ -1,6 +1,12 @@
 {
   "placeholderImages": [
     {
+      "id": "hero-portrait",
+      "description": "A portrait of the site owner for the hero section.",
+      "imageUrl": "https://i.imgur.com/uiFxqeG.jpeg",
+      "imageHint": "portrait person"
+    },
+    {
       "id": "about-me",
       "description": "A portrait of the site owner.",
       "imageUrl": "https://i.imgur.com/uiFxqeG.jpeg",

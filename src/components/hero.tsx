@@ -1,17 +1,31 @@
 
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import AnimatedBackground from './AnimatedBackground';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const Hero = () => {
+    const heroImage = PlaceHolderImages.find(p => p.id === 'hero-portrait');
   return (
     <section className="w-full h-[80vh] flex items-center justify-center text-center overflow-hidden bg-background">
       <AnimatedBackground>
         <div className="container px-4 md:px-6 h-[80vh] flex items-center justify-center">
           <div className="grid gap-6 lg:gap-8">
-            <div className="space-y-4">
+            <div className="space-y-4 flex flex-col items-center">
+                {heroImage && (
+                    <Image 
+                        src={heroImage.imageUrl}
+                        alt="A portrait of HopeEngineer"
+                        width={128}
+                        height={128}
+                        className="rounded-full object-cover aspect-square border-4 border-primary shadow-lg mb-4"
+                        data-ai-hint={heroImage.imageHint}
+                        priority
+                    />
+                )}
               <h1 className="text-4xl font-headline font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none text-foreground">
                 Engineer Your Hope,
                 <br />
