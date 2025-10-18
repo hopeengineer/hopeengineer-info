@@ -121,6 +121,7 @@ export const services = [
   },
   {
     title: "AI Automation",
+    tagline: "Build your legacy, not your workload",
     description: "Leverage the power of AI to automate your content creation, from blog posts to social media updates.",
     image: getImage('service-automation'),
   },
