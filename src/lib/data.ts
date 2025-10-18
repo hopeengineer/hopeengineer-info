@@ -99,7 +99,12 @@ export const blogPosts = [
 export const services = [
   {
     title: "1-on-1 Sessions",
-    description: "This is a personalized deep dive to design your personal system for growth. We'll engineer a clear, authentic, and powerful plan for your content, growth, and monetization. ✓ Personalized Threads & Content Strategy ✓ Authentic Monetization Framework ✓ Radical Clarity & Actionable Steps",
+    description: [
+      "This is a 1-on-1 deep dive to design your personal system for growth. We'll engineer a clear, authentic, and powerful plan for your content, growth, and monetization.",
+      "✓ Personalized Threads & Content Strategy",
+      "✓ Authentic Monetization Framework",
+      "✓ Radical Clarity & Actionable Steps",
+    ],
     image: getImage('service-sessions'),
   },
   {

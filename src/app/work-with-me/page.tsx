@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from "react";
@@ -44,7 +45,17 @@ const WorkWithMePage = () => {
               </div>
               <CardHeader className="flex-1">
                 <CardTitle className="font-headline text-2xl">{service.title}</CardTitle>
-                <CardDescription>{service.description}</CardDescription>
+                <CardDescription>
+                  {Array.isArray(service.description) ? (
+                    <div className="space-y-2">
+                      {service.description.map((line, index) => (
+                        <p key={index}>{line}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    service.description
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button onClick={scrollToContactForm} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">

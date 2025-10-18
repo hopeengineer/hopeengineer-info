@@ -60,7 +60,17 @@ export default function Home() {
                 <Card key={service.title} className="transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
                   <CardHeader>
                     <CardTitle className="font-headline">{service.title}</CardTitle>
-                    <CardDescription>{service.description}</CardDescription>
+                    <CardDescription>
+                      {Array.isArray(service.description) ? (
+                        <div className="space-y-2">
+                          {service.description.map((line, index) => (
+                            <p key={index}>{line}</p>
+                          ))}
+                        </div>
+                      ) : (
+                        service.description
+                      )}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Link href="/work-with-me">
