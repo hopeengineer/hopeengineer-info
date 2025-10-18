@@ -69,6 +69,7 @@
         "email": { "type": "string", "format": "email", "description": "The email address of the sender." },
         "service": { "type": "string", "description": "The service the user is interested in." },
         "message": { "type": "string", "description": "The content of the message." },
+        "isRead": { "type": "boolean", "description": "Whether the admin has read the message." },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the message was sent." }
       },
       "required": ["name", "email", "message", "createdAt"]

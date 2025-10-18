@@ -1,15 +1,16 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 type ContactMessage = {
   id: string;
@@ -17,6 +18,7 @@ type ContactMessage = {
   email: string;
   service: string;
   message: string;
+  isRead?: boolean;
   createdAt: {
     seconds: number;
     nanoseconds: number;
@@ -42,6 +44,22 @@ export default function InboxPage() {
   }, [firestore]);
 
   const { data: messages, isLoading } = useCollection<ContactMessage>(messagesQuery);
+  
+  const handleAccordionChange = (value: string) => {
+    // Value is the ID of the opened message
+    if (value && firestore) {
+      const message = messages?.find(m => m.id === value);
+      // Only update if it's not already marked as read
+      if (message && !message.isRead) {
+        const messageRef = doc(firestore, 'contacts', value);
+        updateDoc(messageRef, { isRead: true }).catch(err => {
+            console.error("Failed to mark message as read:", err);
+            // Optionally, show a toast notification for failure
+        });
+      }
+    }
+  };
+
 
   if (isUserLoading || !isAdmin) {
     return (
@@ -56,7 +74,7 @@ export default function InboxPage() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-3xl">Inbox</CardTitle>
-          <CardDescription>Messages from the contact form.</CardDescription>
+          <CardDescription>Messages from the contact form. Unread messages are bold.</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -67,13 +85,13 @@ export default function InboxPage() {
              </div>
           )}
           {!isLoading && messages && messages.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion type="single" collapsible className="w-full" onValueChange={handleAccordionChange}>
               {messages.map((msg) => (
                 <AccordionItem key={msg.id} value={msg.id}>
                   <AccordionTrigger>
                     <div className="flex justify-between w-full pr-4">
                         <div className="flex flex-col text-left">
-                            <span className="font-semibold">{msg.name}</span>
+                            <span className={cn("font-semibold", !msg.isRead && "font-bold")}>{msg.name}</span>
                             <span className="text-sm text-muted-foreground">{msg.service}</span>
                         </div>
                         <span className="text-sm text-muted-foreground">
