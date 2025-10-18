@@ -108,7 +108,7 @@ export const services = [
     image: getImage('service-sessions'),
   },
   {
-    title: "Full Circle (FC) ⭕",
+    title: "Full Circle ⭕",
     description: "Join a thriving community of like-minded engineers and creators for collaborative learning and growth.",
     image: getImage('service-community'),
   },
