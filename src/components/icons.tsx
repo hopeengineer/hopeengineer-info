@@ -18,33 +18,3 @@ export const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M12 6.13c1.67 0 3.1.58 4.24 1.63l3.52-3.52C17.68 2.39 15.1 1 12 1 7.66 1 3.93 3.77 2.05 7.45l4.02 3.1C6.9 7.99 9.24 6.13 12 6.13z" />
   </svg>
 );
-
-
-export const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <title>HopeEngineer Hub Logo</title>
-    {/* Engineer Gear */}
-    <path d="M12 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14z" />
-    <path d="M12 9v6" />
-    <path d="m15 12-3-3-3 3" />
-    
-    {/* Hope Rays */}
-    <path d="M12 2v2" />
-    <path d="m4.93 4.93 1.41 1.41" />
-    <path d="M2 12h2" />
-    <path d="m4.93 19.07 1.41-1.41" />
-    <path d="M12 20v2" />
-    <path d="m19.07 19.07-1.41-1.41" />
-    <path d="M22 12h-2" />
-    <path d="m19.07 4.93-1.41 1.41" />
-  </svg>
-);
