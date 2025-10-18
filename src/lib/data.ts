@@ -1,4 +1,5 @@
-import { Facebook, Instagram, AtSign } from "lucide-react";
+
+import { Facebook, Instagram, AtSign, Inbox } from "lucide-react";
 import type { ImagePlaceholder } from './placeholder-images';
 import { PlaceHolderImages } from './placeholder-images';
 
