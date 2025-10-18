@@ -25,7 +25,7 @@ const WorkWithMePage = () => {
     // Use a timeout to ensure the dialog has closed before scrolling
     setTimeout(() => {
       scrollToContactForm();
-    }, 100);
+    }, 300);
   };
 
   return (
