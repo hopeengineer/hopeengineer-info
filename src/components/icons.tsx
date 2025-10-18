@@ -62,17 +62,14 @@ export const MediumIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export const SubstackIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
-        viewBox="0 0 24 24"
+        viewBox="0 0 50 50"
         xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
+        stroke="none"
         {...props}
     >
-        <path d="M21 6H3v12h18V6z" />
-        <path d="M12 6V3l-3 3h3z" />
-        <path d="M12 18v3l-3-3h3z" />
+        <path d="M43,11H8V5h35V11z"></path>
+        <path d="M43,19H8v-6h35V19z"></path>
+        <path d="M43,44.805L25.984,34.169L8,44.748V21h35V44.805z"></path>
     </svg>
 );
