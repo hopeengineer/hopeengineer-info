@@ -111,7 +111,12 @@ export const services = [
   {
     title: "Full Circle ⭕",
     tagline: "Where community becomes the engine for your impact",
-    description: "Join a thriving community of like-minded engineers and creators for collaborative learning and growth.",
+    description: [
+      "Join our paid school, led by me and 3 other experts. This isn't just a course; it's a collaborative ecosystem. We merge group lessons with personalized guidance to build your influence together.",
+      "✓ Group Coaching with 4 Experts",
+      "✓ Shared Viral-Worthy Content Labs",
+      "✓ Systems for Co-Growth & Monetization",
+    ],
     image: getImage('service-community'),
   },
   {
