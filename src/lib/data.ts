@@ -28,7 +28,7 @@ export const NAV_LINKS = [
 
 export const SOCIAL_LINKS = [
   { name: "Threads", href: "https://www.threads.com/@hopeengineer", icon: AtSign },
-  { name: "Instagram", href: "#", icon: Instagram },
+  { name: "Instagram", href: "https://www.instagram.com/hopeengineer", icon: Instagram },
   { name: "Facebook", href: "#", icon: Facebook },
 ];
 
