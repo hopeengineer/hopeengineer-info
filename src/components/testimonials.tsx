@@ -40,7 +40,7 @@ const Testimonials = () => {
     setTestimonials(
       initialTestimonials.map((testimonial, index) => {
         // Generate random positions within the board, leaving some margin
-        const x = Math.random() * (boardWidth - 300); 
+        const x = Math.random() * (boardWidth - 300);
         const y = Math.random() * (boardHeight - 225);
         const rotation = Math.random() * 20 - 10; // Random rotation between -10 and 10 degrees
         return {
@@ -52,14 +52,13 @@ const Testimonials = () => {
         };
       })
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, id: number) => {
     // Prevent default drag behavior to avoid conflicts
     if (e.button !== 0) return; // Only allow left-clicks
     e.preventDefault();
-    
+
     const testimonial = testimonials.find(t => t.id === id);
     if (!testimonial) return;
 
@@ -77,7 +76,7 @@ const Testimonials = () => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!dragState || !boardRef.current) return;
-    
+
     const boardRect = boardRef.current.getBoundingClientRect();
     let newX = e.clientX - dragState.offsetX;
     let newY = e.clientY - dragState.offsetY;
@@ -87,7 +86,7 @@ const Testimonials = () => {
     newY = Math.max(0, Math.min(newY, boardRect.height - 225)); // Assuming card height is 225px
 
 
-    setTestimonials(testimonials.map(t => 
+    setTestimonials(testimonials.map(t =>
       t.id === dragState.id ? { ...t, x: newX, y: newY } : t
     ));
   };
@@ -95,11 +94,11 @@ const Testimonials = () => {
   const handleMouseUp = () => {
     setDragState(null);
   };
-  
+
   const handleMouseLeave = () => {
     setDragState(null);
   };
-  
+
   const handleDoubleClick = (imageUrl: string) => {
     setZoomedImage(imageUrl);
   };
@@ -120,63 +119,63 @@ const Testimonials = () => {
             </p>
           </div>
         </div>
-        
-        <div 
-            ref={boardRef}
-            className="relative w-full h-[600px] mt-12 cursor-grab active:cursor-grabbing"
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
+
+        <div
+          ref={boardRef}
+          className="relative w-full h-[600px] mt-12 cursor-grab active:cursor-grabbing"
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
         >
-            {testimonials.map((testimonial) => (
-                <div
-                    key={testimonial.id}
-                    className="absolute transition-all duration-300 ease-out"
-                    style={{
-                        left: `${testimonial.x}px`,
-                        top: `${testimonial.y}px`,
-                        transform: `rotate(${testimonial.rotation}deg)`,
-                        zIndex: testimonial.zIndex,
-                        userSelect: 'none',
-                    }}
-                    onMouseDown={(e) => handleMouseDown(e, testimonial.id)}
-                    onDoubleClick={() => handleDoubleClick(testimonial.image.imageUrl)}
-                >
-                    <Card className={cn(
-                        "overflow-hidden shadow-2xl w-[300px] aspect-4/3",
-                        "transform transition-transform duration-300",
-                        dragState?.id === testimonial.id ? 'scale-105 shadow-primary/40' : 'hover:scale-105'
-                    )}>
-                      <CardContent className="p-0">
-                        <Image
-                          src={testimonial.image.imageUrl}
-                          alt={`Testimonial from ${testimonial.name}`}
-                          width={400}
-                          height={300}
-                          className="w-full h-full object-cover pointer-events-none"
-                          data-ai-hint={testimonial.image.imageHint}
-                          priority={true}
-                        />
-                      </CardContent>
-                    </Card>
-                </div>
-            ))}
+          {testimonials.map((testimonial) => (
+            <div
+              key={testimonial.id}
+              className="absolute transition-all duration-300 ease-out"
+              style={{
+                left: `${testimonial.x}px`,
+                top: `${testimonial.y}px`,
+                transform: `rotate(${testimonial.rotation}deg)`,
+                zIndex: testimonial.zIndex,
+                userSelect: 'none',
+              }}
+              onMouseDown={(e) => handleMouseDown(e, testimonial.id)}
+              onDoubleClick={() => handleDoubleClick(testimonial.image.imageUrl)}
+            >
+              <Card className={cn(
+                "overflow-hidden shadow-2xl w-[300px] aspect-4/3",
+                "transform transition-transform duration-300",
+                dragState?.id === testimonial.id ? 'scale-105 shadow-primary/40' : 'hover:scale-105'
+              )}>
+                <CardContent className="p-0">
+                  <Image
+                    src={testimonial.image.imageUrl}
+                    alt={`Testimonial from ${testimonial.name}`}
+                    width={400}
+                    height={300}
+                    className="w-full h-full object-cover pointer-events-none"
+                    data-ai-hint={testimonial.image.imageHint}
+                    priority={true}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ))}
         </div>
       </div>
-      
+
       <Dialog open={!!zoomedImage} onOpenChange={(isOpen) => !isOpen && setZoomedImage(null)}>
         <DialogContent className="p-0 border-0 max-w-4xl bg-transparent shadow-none">
-            <DialogTitle className="sr-only">Zoomed Testimonial</DialogTitle>
-            <DialogDescription className="sr-only">A larger view of the selected testimonial screenshot.</DialogDescription>
-            {zoomedImage && (
-                <Image
-                    src={zoomedImage}
-                    alt="Zoomed testimonial"
-                    width={1600}
-                    height={1200}
-                    className="w-full h-auto object-contain rounded-lg"
-                />
-            )}
+          <DialogTitle className="sr-only">Zoomed Testimonial</DialogTitle>
+          <DialogDescription className="sr-only">A larger view of the selected testimonial screenshot.</DialogDescription>
+          {zoomedImage && (
+            <Image
+              src={zoomedImage}
+              alt="Zoomed testimonial"
+              width={1600}
+              height={1200}
+              className="w-full h-auto object-contain rounded-lg"
+            />
+          )}
         </DialogContent>
       </Dialog>
 

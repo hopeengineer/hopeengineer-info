@@ -5,40 +5,33 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Rocket } from 'lucide-react';
 
+const calculateTimeLeft = () => {
+  if (typeof window === 'undefined') return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  const now = new Date();
+  const targetDate = new Date(now.getFullYear(), now.getMonth(), 26);
+
+  if (now > targetDate) {
+    targetDate.setMonth(targetDate.getMonth() + 1);
+  }
+
+  const difference = targetDate.getTime() - now.getTime();
+
+  if (difference > 0) {
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
+    };
+  }
+  return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+};
+
 const CountdownPopup = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+  const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft());
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const targetDate = new Date(now.getFullYear(), now.getMonth(), 26);
-
-      if (now > targetDate) {
-        // If the date has passed this month, target next month
-        targetDate.setMonth(targetDate.getMonth() + 1);
-      }
-
-      const difference = targetDate.getTime() - now.getTime();
-
-      if (difference > 0) {
-        return {
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        };
-      }
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    };
-
-    setTimeLeft(calculateTimeLeft());
-
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);

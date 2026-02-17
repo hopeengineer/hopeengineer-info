@@ -1,10 +1,29 @@
 import type { Metadata } from 'next';
+import { Inter, Space_Grotesk, Source_Code_Pro } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 import { SupabaseProvider } from '@/components/supabase-provider';
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-inter',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['500', '700'],
+  variable: '--font-space-grotesk',
+});
+
+const sourceCodePro = Source_Code_Pro({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-source-code-pro',
+});
 
 export const metadata: Metadata = {
   title: 'HopeEngineer Hub',
@@ -17,12 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable} ${sourceCodePro.variable}`} suppressHydrationWarning>
       <body
         className={cn("font-body antialiased", "min-h-screen bg-background font-sans")}
         suppressHydrationWarning

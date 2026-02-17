@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { useUser, useSupabase } from '@/hooks/use-supabase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -195,7 +196,7 @@ export default function EditBlogPostPage() {
                     {post?.image_url && (
                       <div className="mb-4">
                         <p className="text-sm text-muted-foreground">Current Image:</p>
-                        <img src={post.image_url} alt="Current featured image" className="w-48 h-auto rounded-md border" />
+                        <Image src={post.image_url} alt="Current featured image" width={192} height={108} className="w-48 h-auto rounded-md border" />
                       </div>
                     )}
                     <FormControl>
