@@ -1,5 +1,17 @@
-# Firebase Studio
+# HopeEngineer Hub
 
-This is a NextJS starter in Firebase Studio.
+A personal website built with Next.js 15, Supabase (Auth + PostgreSQL), and shadcn/ui.
 
-To get started, take a look at src/app/page.tsx.
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+## Stack
+
+- **Framework**: Next.js 15 (Turbopack)
+- **Database & Auth**: Supabase
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Hosting**: Railway

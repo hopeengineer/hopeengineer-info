@@ -8,36 +8,46 @@ import { services } from "@/lib/data";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { useCollection, publicFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { useSupabase } from "@/hooks/use-supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type BlogPost = {
-    id: string;
-    slug: string;
-    title: string;
-    description: string;
-    date: string;
-    author: string;
-    image: {
-      imageUrl: string;
-      imageHint: string;
-    };
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  date: string;
+  author: string;
+  image_url: string;
+  image_hint: string;
 }
 
 export default function Home() {
-  // Use the public, read-only firestore instance. This ensures blog posts are always visible.
-  const firestore = publicFirestore;
+  const { supabase } = useSupabase();
   const router = useRouter();
+  const [latestPosts, setLatestPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const latestPostsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'blogPosts'), orderBy('date', 'desc'), limit(3));
-  }, [firestore]);
+  useEffect(() => {
+    async function fetchPosts() {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(3);
 
-  const { data: latestPosts, isLoading } = useCollection<BlogPost>(latestPostsQuery);
-  
+      if (error) {
+        console.warn('[Home] Failed to fetch blog posts:', error.message, error.code);
+      } else if (data) {
+        setLatestPosts(data);
+      }
+      setIsLoading(false);
+    }
+    fetchPosts();
+  }, [supabase]);
+
   const handleServiceClick = (service: (typeof services)[0]) => {
     if (service.externalUrl) {
       window.open(service.externalUrl, '_blank');
@@ -59,14 +69,14 @@ export default function Home() {
               </p>
             </div>
             <div className="mx-auto mt-8 max-w-lg">
-                <iframe 
-                    src="https://hopeengineer.substack.com/embed" 
-                    width="100%" 
-                    height="320" 
-                    style={{border: '1px solid #EEE', background: 'white'}} 
-                    frameBorder="0" 
-                    scrolling="no"
-                ></iframe>
+              <iframe
+                src="https://hopeengineer.substack.com/embed"
+                width="100%"
+                height="320"
+                style={{ border: '1px solid #EEE', background: 'white' }}
+                frameBorder="0"
+                scrolling="no"
+              ></iframe>
             </div>
           </div>
         </section>
@@ -81,7 +91,7 @@ export default function Home() {
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   Unlock your potential with my bespoke services, from one-on-one coaching to AI-powered content solutions.
                 </p>
-                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   These are the blueprints. Choose the one that builds your future.
                 </p>
               </div>
@@ -105,12 +115,12 @@ export default function Home() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                     {service.externalUrl ? (
+                    {service.externalUrl ? (
                       <Button className="w-full" onClick={() => handleServiceClick(service)}>
                         Learn More <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     ) : (
-                       <Link href="/work-with-me">
+                      <Link href="/work-with-me">
                         <Button className="w-full">
                           Learn More <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -149,26 +159,26 @@ export default function Home() {
                 ))
               )}
               {latestPosts?.map((post) => (
-                 <Card key={post.slug} className="overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
-                    <Link href={`/blog/${post.slug}`} className="block">
-                      <Image
-                        src={post.image.imageUrl}
-                        alt={post.title}
-                        width={600}
-                        height={400}
-                        className="aspect-video w-full object-cover"
-                        data-ai-hint={post.image.imageHint}
-                      />
+                <Card key={post.slug} className="overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
+                  <Link href={`/blog/${post.slug}`} className="block">
+                    <Image
+                      src={post.image_url || 'https://picsum.photos/seed/default/600/400'}
+                      alt={post.title}
+                      width={600}
+                      height={400}
+                      className="aspect-video w-full object-cover"
+                      data-ai-hint={post.image_hint}
+                    />
+                  </Link>
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-headline font-bold mb-2">{post.title}</h3>
+                    <p className="text-muted-foreground text-sm mb-4">{post.date}</p>
+                    <p className="text-muted-foreground line-clamp-3">{post.description}</p>
+                    <Link href={`/blog/${post.slug}`} className="mt-4 inline-block">
+                      <Button variant="link" className="px-0">Read More <ArrowRight className="ml-2 h-4 w-4" /></Button>
                     </Link>
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-headline font-bold mb-2">{post.title}</h3>
-                      <p className="text-muted-foreground text-sm mb-4">{post.date}</p>
-                      <p className="text-muted-foreground line-clamp-3">{post.description}</p>
-                       <Link href={`/blog/${post.slug}`} className="mt-4 inline-block">
-                         <Button variant="link" className="px-0">Read More <ArrowRight className="ml-2 h-4 w-4" /></Button>
-                       </Link>
-                    </CardContent>
-                 </Card>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

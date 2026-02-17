@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,15 +21,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { initiateEmailSignIn, initiateEmailSignUp, useAuth, useUser } from '@/firebase';
+import { useSupabase, useUser } from '@/hooks/use-supabase';
 import { GoogleIcon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import {
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -59,11 +53,11 @@ type AuthFormProps = {
 };
 
 export function AuthForm({ mode }: AuthFormProps) {
-  const auth = useAuth();
+  const { supabase } = useSupabase();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const isLogin = mode === 'login';
   const schema = isLogin ? loginSchema : signupSchema;
 
@@ -78,7 +72,6 @@ export function AuthForm({ mode }: AuthFormProps) {
   });
 
   useEffect(() => {
-    // If we were submitting and now we have a user, it means login/signup was successful.
     if (isSubmitting && user) {
       if (mode === 'signup') {
         toast({
@@ -91,29 +84,48 @@ export function AuthForm({ mode }: AuthFormProps) {
   }, [user, isSubmitting, router, toast, mode]);
 
 
-  function onSubmit(data: z.infer<typeof schema>) {
-    if (!auth) return;
+  async function onSubmit(data: z.infer<typeof schema>) {
     setIsSubmitting(true);
-    if (isLogin) {
-      initiateEmailSignIn(auth, data.email, data.password);
-    } else {
-      initiateEmailSignUp(auth, data.email, data.password);
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+        });
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      setIsSubmitting(false);
+      toast({
+        variant: 'destructive',
+        title: isLogin ? 'Login Failed' : 'Sign Up Failed',
+        description: error.message,
+      });
     }
   }
 
-  const handleGoogleSignIn = () => {
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
+  const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
-    signInWithPopup(auth, provider).catch((error) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+    if (error) {
       setIsSubmitting(false);
-      console.error('Google sign-in error', error);
       toast({
         variant: 'destructive',
         title: 'Google Sign-In Failed',
         description: error.message,
-      })
-    });
+      });
+    }
   };
 
   const isLoading = isUserLoading || isSubmitting;
@@ -153,7 +165,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="********" {...field} disabled={isLoading}/>
+                    <Input type="password" placeholder="********" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

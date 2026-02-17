@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc, query, collection, where, limit, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { useUser, useSupabase } from '@/hooks/use-supabase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,12 +27,10 @@ type BlogPost = {
   id: string;
   slug: string;
   title: string;
-  description:string;
+  description: string;
   content: string;
-  image: {
-    imageUrl: string;
-    imageHint: string;
-  };
+  image_url: string;
+  image_hint: string;
 };
 
 export default function EditBlogPostPage() {
@@ -42,20 +39,12 @@ export default function EditBlogPostPage() {
   const slug = params.slug as string;
 
   const { toast } = useToast();
-  const { user, isAdmin, isUserLoading } = useUser();
-  const firestore = useFirestore();
+  const { isAdmin, isUserLoading } = useUser();
+  const { supabase } = useSupabase();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [isPostLoading, setIsPostLoading] = useState(true);
 
-  // The query will be null until `firestore` and `slug` are available.
-  const postQuery = useMemoFirebase(() => {
-    if (!firestore || !slug) return null;
-    return query(collection(firestore, 'blogPosts'), where('slug', '==', slug), limit(1));
-  }, [firestore, slug]);
-
-  // isPostLoading will be false initially, and then true when the query is valid and fetching starts.
-  const { data: posts, isLoading: isPostLoading } = useCollection<BlogPost>(postQuery);
-  const post = posts?.[0];
-  
   const form = useForm<EditPostForm>({
     resolver: zodResolver(editPostSchema),
     defaultValues: {
@@ -67,18 +56,30 @@ export default function EditBlogPostPage() {
   });
 
   useEffect(() => {
-    if (post) {
-      form.reset({
-        title: post.title,
-        description: post.description,
-        content: post.content,
-        imageUrl: post.image?.imageUrl || '',
-      });
+    if (!slug) return;
+
+    async function fetchPost() {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (!error && data) {
+        setPost(data);
+        form.reset({
+          title: data.title,
+          description: data.description,
+          content: data.content,
+          imageUrl: data.image_url || '',
+        });
+      }
+      setIsPostLoading(false);
     }
-  }, [post, form]);
+    fetchPost();
+  }, [slug, supabase, form]);
 
   useEffect(() => {
-    // Wait for auth check to complete before making decisions
     if (!isUserLoading && !isAdmin) {
       toast({ variant: 'destructive', title: 'Unauthorized', description: 'You do not have permission to edit this page.' });
       router.push(`/blog/${slug}`);
@@ -86,73 +87,69 @@ export default function EditBlogPostPage() {
   }, [isUserLoading, isAdmin, router, slug, toast]);
 
   const onSubmit = async (data: EditPostForm) => {
-    if (!firestore || !post) return;
+    if (!post) return;
     setIsSubmitting(true);
 
     try {
-        const postRef = doc(firestore, 'blogPosts', post.id);
-        const updatedData = {
-            title: data.title,
-            description: data.description,
-            content: data.content,
-            updatedAt: serverTimestamp(),
-            image: {
-                imageUrl: data.imageUrl || post.image?.imageUrl,
-                imageHint: data.imageUrl ? 'custom url' : post.image?.imageHint,
-            }
-        };
+      const updatedData = {
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        updated_at: new Date().toISOString(),
+        image_url: data.imageUrl || post.image_url,
+        image_hint: data.imageUrl ? 'custom url' : post.image_hint,
+      };
 
-        await updateDoc(postRef, updatedData);
+      const { error } = await supabase
+        .from('blog_posts')
+        .update(updatedData)
+        .eq('id', post.id);
 
-        toast({
+      if (error) throw error;
+
+      toast({
         title: 'Post Updated!',
         description: 'Your changes have been saved successfully.',
-        });
-        router.push(`/blog/${slug}`);
-        
-    } catch (error) {
-        console.error("Error updating post:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Uh oh! Something went wrong.',
-            description: 'Could not update the post.',
-        });
+      });
+      router.push(`/blog/${slug}`);
+    } catch (error: any) {
+      console.error("Error updating post:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: error?.message || 'Could not update the post.',
+      });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
-  
-  // Overall loading state is true if we are waiting for the user OR the query is valid and we're fetching the post.
-  const isLoading = isUserLoading || (!!postQuery && isPostLoading);
-  
-  // Condition for not found: query is valid, loading is finished, and we still have no post.
-  const isNotFound = !isLoading && !!postQuery && !post;
 
-  if (isNotFound) {
+  const isLoading = isUserLoading || isPostLoading;
+
+  if (!isLoading && !post) {
     notFound();
-    return null; // notFound() throws an error, but this makes it explicit.
+    return null;
   }
 
-  // Show skeleton while loading or if the query isn't ready yet.
-  if (isLoading || !postQuery) {
+  if (isLoading) {
     return (
-        <div className="container max-w-4xl mx-auto py-12 px-4">
-            <Card>
-                <CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader>
-                <CardContent className="space-y-6">
-                    <Skeleton className="h-4 w-1/4" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-4 w-1/4" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-4 w-1/4" />
-                    <Skeleton className="h-40 w-full" />
-                    <Skeleton className="h-10 w-24" />
-                </CardContent>
-            </Card>
-        </div>
+      <div className="container max-w-4xl mx-auto py-12 px-4">
+        <Card>
+          <CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader>
+          <CardContent className="space-y-6">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-10 w-24" />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
-  
+
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <Card>
@@ -195,14 +192,14 @@ export default function EditBlogPostPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Featured Image URL</FormLabel>
-                     {post?.image && (
-                        <div className="mb-4">
-                            <p className="text-sm text-muted-foreground">Current Image:</p>
-                            <img src={post.image.imageUrl} alt="Current featured image" className="w-48 h-auto rounded-md border" />
-                        </div>
-                     )}
+                    {post?.image_url && (
+                      <div className="mb-4">
+                        <p className="text-sm text-muted-foreground">Current Image:</p>
+                        <img src={post.image_url} alt="Current featured image" className="w-48 h-auto rounded-md border" />
+                      </div>
+                    )}
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder="https://example.com/your-image.jpg"
                         {...field}
                       />
@@ -230,7 +227,7 @@ export default function EditBlogPostPage() {
                   {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button variant="outline" type="button" onClick={() => router.back()}>
-                    Cancel
+                  Cancel
                 </Button>
               </div>
             </form>

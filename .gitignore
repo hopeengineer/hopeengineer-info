@@ -43,3 +43,7 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+# Node.js 25 localStorage workaround
+.node-localstorage
+.node-localstorage-shm
+.node-localstorage-wal

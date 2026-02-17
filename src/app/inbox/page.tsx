@@ -3,14 +3,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useUser, useSupabase } from '@/hooks/use-supabase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import {
@@ -31,18 +29,18 @@ type ContactMessage = {
   email: string;
   service: string;
   message: string;
-  isRead?: boolean;
-  createdAt: {
-    seconds: number;
-    nanoseconds: number;
-  };
+  is_read: boolean;
+  created_at: string;
 };
 
 export default function InboxPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { isAdmin, isUserLoading } = useUser();
-  const firestore = useFirestore();
+  const { supabase } = useSupabase();
+
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!isUserLoading && !isAdmin) {
@@ -51,43 +49,58 @@ export default function InboxPage() {
     }
   }, [isUserLoading, isAdmin, router, toast]);
 
-  const messagesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'contacts'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+  useEffect(() => {
+    if (!isAdmin) return;
 
-  const { data: messages, isLoading } = useCollection<ContactMessage>(messagesQuery);
-  
-  const handleAccordionChange = (value: string) => {
-    if (value && firestore) {
-      const message = messages?.find(m => m.id === value);
-      if (message && !message.isRead) {
-        const messageRef = doc(firestore, 'contacts', value);
-        updateDoc(messageRef, { isRead: true }).catch(err => {
-            console.error("Failed to mark message as read:", err);
-        });
+    async function fetchMessages() {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setMessages(data);
+      }
+      setIsLoading(false);
+    }
+    fetchMessages();
+  }, [supabase, isAdmin]);
+
+  const handleAccordionChange = async (value: string) => {
+    if (value) {
+      const message = messages.find(m => m.id === value);
+      if (message && !message.is_read) {
+        const { error } = await supabase
+          .from('contacts')
+          .update({ is_read: true })
+          .eq('id', value);
+
+        if (!error) {
+          setMessages(prev => prev.map(m => m.id === value ? { ...m, is_read: true } : m));
+        }
       }
     }
   };
-  
-  const handleDelete = (messageId: string) => {
-    if (!firestore) return;
-    const messageRef = doc(firestore, 'contacts', messageId);
-    deleteDoc(messageRef)
-      .then(() => {
-        toast({
-          title: 'Message Deleted',
-          description: 'The message has been permanently removed.',
-        });
-      })
-      .catch((error) => {
-        console.error('Error deleting message:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Could not delete the message.',
-        });
+
+  const handleDelete = async (messageId: string) => {
+    const { error } = await supabase
+      .from('contacts')
+      .delete()
+      .eq('id', messageId);
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not delete the message.',
       });
+    } else {
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      toast({
+        title: 'Message Deleted',
+        description: 'The message has been permanently removed.',
+      });
+    }
   };
 
 
@@ -108,60 +121,60 @@ export default function InboxPage() {
         </CardHeader>
         <CardContent>
           {isLoading && (
-             <div className="space-y-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-             </div>
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           )}
-          {!isLoading && messages && messages.length > 0 ? (
+          {!isLoading && messages.length > 0 ? (
             <Accordion type="single" collapsible className="w-full" onValueChange={handleAccordionChange}>
               {messages.map((msg) => (
                 <AccordionItem key={msg.id} value={msg.id}>
                   <AccordionTrigger>
                     <div className="flex justify-between items-center w-full pr-4">
-                        <div className="flex items-center gap-3">
-                           {!msg.isRead && <div className="h-2.5 w-2.5 rounded-full bg-green-500" />}
-                           <div className="flex flex-col text-left">
-                                <span className="font-semibold">{msg.name}</span>
-                                <span className="text-sm text-muted-foreground">{msg.service}</span>
-                           </div>
+                      <div className="flex items-center gap-3">
+                        {!msg.is_read && <div className="h-2.5 w-2.5 rounded-full bg-green-500" />}
+                        <div className="flex flex-col text-left">
+                          <span className="font-semibold">{msg.name}</span>
+                          <span className="text-sm text-muted-foreground">{msg.service}</span>
                         </div>
-                         <span className="text-sm text-muted-foreground">
-                            {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000)) : ''} ago
-                        </span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {msg.created_at ? formatDistanceToNow(new Date(msg.created_at)) : ''} ago
+                      </span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4">
                     <p className="text-sm text-muted-foreground">From: {msg.email}</p>
                     <p className="whitespace-pre-wrap">{msg.message}</p>
                     <div className="flex justify-end pt-2">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <Button 
-                                variant="destructive" 
-                                size="sm"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                               <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete this message.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(msg.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete this message.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(msg.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </AccordionContent>
                 </AccordionItem>

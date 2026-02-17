@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, User, LogOut, Code, Inbox } from "lucide-react";
 import { NAV_LINKS } from "@/lib/data";
 import { cn } from "@/lib/utils";
-import { useAuth, useUser } from "@/firebase";
+import { useUser, useSupabase } from "@/hooks/use-supabase";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,18 +18,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-import { getAuth } from "firebase/auth";
 import { LogoIcon } from "../icons";
 
 const Header = () => {
   const pathname = usePathname();
   const { user, isUserLoading, isAdmin } = useUser();
-  const auth = useAuth();
+  const { supabase } = useSupabase();
 
-  const handleSignOut = () => {
-    if (auth) {
-      auth.signOut();
-    }
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -70,8 +67,8 @@ const Header = () => {
               <SheetContent side="left">
                 <div className="flex flex-col space-y-4 p-4">
                   <Link href="/" className="flex items-center space-x-2">
-                     <Code className="h-6 w-6 text-primary" />
-                     <span className="font-bold font-headline">HopeEngineer Hub</span>
+                    <Code className="h-6 w-6 text-primary" />
+                    <span className="font-bold font-headline">HopeEngineer Hub</span>
                   </Link>
                   <nav className="flex flex-col space-y-2">
                     {NAV_LINKS.map((link) => (
@@ -96,8 +93,8 @@ const Header = () => {
             <span className="font-bold font-headline">HopeEngineer</span>
           </Link>
           <nav className="flex items-center">
-          {isUserLoading ? (
-              <div /> 
+            {isUserLoading ? (
+              <div />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -116,7 +113,7 @@ const Header = () => {
                     <DropdownMenuGroup>
                       <DropdownMenuSeparator />
                       <DropdownMenuLabel>Admin</DropdownMenuLabel>
-                       <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild>
                         <Link href="/inbox">
                           <Inbox className="mr-2 h-4 w-4" />
                           Inbox

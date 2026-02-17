@@ -3,115 +3,52 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, PlusCircle, Download } from "lucide-react";
-import { useUser, useCollection, useFirestore, useMemoFirebase, publicFirestore } from "@/firebase";
-import { collection, query, orderBy, serverTimestamp, addDoc, Firestore } from 'firebase/firestore';
+import { ArrowRight, PlusCircle } from "lucide-react";
+import { useUser, useSupabase } from "@/hooks/use-supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { importArticle } from "@/ai/flows/import-article-flow";
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-
 type BlogPost = {
-    id: string;
-    slug: string;
-    title: string;
-    description: string;
-    date: string;
-    author: string;
-    image: {
-      imageUrl: string;
-      imageHint: string;
-    };
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  date: string;
+  author: string;
+  image_url: string;
+  image_hint: string;
 }
 
 const BlogPage = () => {
   const { isAdmin, isUserLoading } = useUser();
-  // All hooks must be called unconditionally at the top level.
-  const loggedInFirestore = useFirestore(); // This hook might throw if user is not authenticated.
+  const { supabase } = useSupabase();
   const router = useRouter();
   const { toast } = useToast();
 
-  const [isImporting, setIsImporting] = useState(false);
-  const [importHtml, setImportHtml] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  // Use the public instance for everyone, and the admin instance for mutations later.
-  const firestore = publicFirestore;
-  
-  const postsQuery = useMemoFirebase(() => {
-    // The query will be null until `firestore` is available.
-    if (!firestore) return null;
-    return query(collection(firestore, 'blogPosts'), orderBy('date', 'desc'));
-  }, [firestore]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [isPostsLoading, setIsPostsLoading] = useState(true);
 
-  // isPostsLoading will be true only when `postsQuery` is valid and fetching starts.
-  const { data: blogPosts, isLoading: isPostsLoading } = useCollection<BlogPost>(postsQuery);
+  useEffect(() => {
+    async function fetchPosts() {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('date', { ascending: false });
 
-  const handleImport = async () => {
-    // Import requires an authenticated admin, so we use loggedInFirestore which was fetched earlier.
-    // We also check for isAdmin status.
-    if (!importHtml || !isAdmin || !loggedInFirestore) {
-        toast({
-            variant: "destructive",
-            title: "HTML is missing or you are not an authorized admin.",
-            description: "Please paste the article's HTML content to import.",
-        });
-        return;
+      if (error) {
+        console.error('Error fetching posts:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch blog posts.' });
+      } else {
+        setBlogPosts(data || []);
+      }
+      setIsPostsLoading(false);
     }
-    setIsImporting(true);
-    try {
-        const parsedArticle = await importArticle({ htmlContent: importHtml });
-        
-        const slug = parsedArticle.title
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .trim()
-          .replace(/[\s-]+/g, '-');
+    fetchPosts();
+  }, [supabase, toast]);
 
-        const newPost = {
-            title: parsedArticle.title,
-            description: parsedArticle.description,
-            content: parsedArticle.content,
-            slug,
-            author: parsedArticle.author || 'HopeEngineer',
-            date: format(new Date(), 'MMMM d, yyyy'),
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            image: {
-                imageUrl: parsedArticle.imageUrl,
-                imageHint: 'imported article',
-            }
-        };
-
-        const postsCollection = collection(loggedInFirestore, 'blogPosts');
-        await addDoc(postsCollection, newPost);
-
-        toast({
-            title: "Import Successful",
-            description: "The article has been imported and saved.",
-        });
-        setIsDialogOpen(false);
-        setImportHtml('');
-    } catch (error) {
-        console.error("Import error:", error);
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        toast({
-            variant: "destructive",
-            title: "Import Failed",
-            description: `Could not import the article. ${errorMessage}`,
-        });
-    } finally {
-        setIsImporting(false);
-    }
-  };
-
-  const isLoading = isUserLoading || (!!postsQuery && isPostsLoading);
+  const isLoading = isUserLoading || isPostsLoading;
 
   return (
     <div className="container max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -123,7 +60,7 @@ const BlogPage = () => {
           Insights on AI, software engineering, productivity, and personal growth.
         </p>
       </header>
-      
+
       {isAdmin && (
         <div className="mb-8 flex justify-center gap-4">
           <Button variant="outline" asChild>
@@ -132,84 +69,51 @@ const BlogPage = () => {
               Create Post
             </Link>
           </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Import from HTML
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Import Article from HTML</DialogTitle>
-                    <DialogDescription>
-                        Go to your article, view the page source, and paste the full HTML here.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid w-full gap-1.5">
-                        <Label htmlFor="import-html">Article HTML</Label>
-                        <Textarea
-                            id="import-html"
-                            value={importHtml}
-                            onChange={(e) => setImportHtml(e.target.value)}
-                            className="h-64 font-code text-xs"
-                            placeholder="<!DOCTYPE html>..."
-                        />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleImport} disabled={isImporting}>
-                        {isImporting ? "Importing..." : "Import"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       )}
 
       {isLoading && (
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map(i => (
-              <Card key={i} className="flex flex-col overflow-hidden">
-                <Skeleton className="aspect-video w-full" />
-                <CardHeader>
-                  <Skeleton className="h-8 w-3/4" />
-                  <Skeleton className="h-4 w-1/2 mt-2" />
-                </CardHeader>
-                <CardContent className="flex-1">
-                   <Skeleton className="h-4 w-full" />
-                   <Skeleton className="h-4 w-full mt-2" />
-                   <Skeleton className="h-4 w-2/3 mt-2" />
-                </CardContent>
-                <CardFooter>
-                  <Skeleton className="h-10 w-full" />
-                </CardFooter>
-              </Card>
-            ))}
-         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="flex flex-col overflow-hidden">
+              <Skeleton className="aspect-video w-full" />
+              <CardHeader>
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2 mt-2" />
+              </CardHeader>
+              <CardContent className="flex-1">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full mt-2" />
+                <Skeleton className="h-4 w-2/3 mt-2" />
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       )}
 
-      {!isLoading && blogPosts?.length === 0 && (
+      {!isLoading && blogPosts.length === 0 && (
         <div className="text-center text-muted-foreground py-16">
           <h2 className="text-2xl font-semibold">No posts yet!</h2>
           <p className="mt-2">
-            {isAdmin ? "Click 'Import from HTML' to add your first post." : "Check back soon for new content."}
+            {isAdmin ? "Click 'Create Post' to add your first post." : "Check back soon for new content."}
           </p>
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {blogPosts?.map((post) => (
+        {blogPosts.map((post) => (
           <Card key={post.slug} className="flex flex-col overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
             <Link href={`/blog/${post.slug}`} className="block">
               <Image
-                src={post.image.imageUrl}
+                src={post.image_url || 'https://picsum.photos/seed/default/600/400'}
                 alt={post.title}
                 width={600}
                 height={400}
                 className="aspect-video w-full object-cover"
-                data-ai-hint={post.image.imageHint}
+                data-ai-hint={post.image_hint}
               />
             </Link>
             <CardHeader>

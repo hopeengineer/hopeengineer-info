@@ -1,8 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useFirestore, useUser, useStorage } from '@/firebase';
-import { collection, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useUser, useSupabase } from '@/hooks/use-supabase';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -27,8 +26,8 @@ type CreatePostForm = z.infer<typeof createPostSchema>;
 export default function CreateBlogPostPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isAdmin, isUserLoading } = useUser();
-  const firestore = useFirestore();
+  const { isAdmin, isUserLoading } = useUser();
+  const { supabase } = useSupabase();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreatePostForm>({
@@ -49,7 +48,6 @@ export default function CreateBlogPostPage() {
   }, [isUserLoading, isAdmin, router, toast]);
 
   const onSubmit = async (data: CreatePostForm) => {
-    if (!firestore) return;
     setIsSubmitting(true);
 
     try {
@@ -66,39 +64,36 @@ export default function CreateBlogPostPage() {
         slug,
         author: 'HopeEngineer',
         date: format(new Date(), 'MMMM d, yyyy'),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        image: {
-            imageUrl: data.imageUrl || 'https://picsum.photos/seed/placeholder/600/400',
-            imageHint: data.imageUrl ? 'custom url' : 'abstract placeholder',
-        }
+        image_url: data.imageUrl || 'https://picsum.photos/seed/placeholder/600/400',
+        image_hint: data.imageUrl ? 'custom url' : 'abstract placeholder',
       };
 
-      const postsCollection = collection(firestore, 'blogPosts');
-      const docRef = await addDoc(postsCollection, newPost);
+      const { error } = await supabase.from('blog_posts').insert(newPost);
+
+      if (error) throw error;
 
       toast({
         title: 'Post Created!',
         description: 'Your new post has been saved.',
       });
       router.push(`/blog/${slug}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating post:", error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: 'Could not create the post. Please try again.',
+        description: error?.message || 'Could not create the post. Please try again.',
       });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   if (isUserLoading || !isAdmin) {
     return (
-        <div className="container max-w-4xl mx-auto py-12 px-4">
-           <p>Loading...</p>
-        </div>
+      <div className="container max-w-4xl mx-auto py-12 px-4">
+        <p>Loading...</p>
+      </div>
     );
   }
 
@@ -138,7 +133,7 @@ export default function CreateBlogPostPage() {
                   </FormItem>
                 )}
               />
-               <FormField
+              <FormField
                 control={form.control}
                 name="imageUrl"
                 render={({ field }) => (
@@ -170,7 +165,7 @@ export default function CreateBlogPostPage() {
                   {isSubmitting ? 'Publishing...' : 'Publish Post'}
                 </Button>
                 <Button variant="outline" type="button" onClick={() => router.back()}>
-                    Cancel
+                  Cancel
                 </Button>
               </div>
             </form>
