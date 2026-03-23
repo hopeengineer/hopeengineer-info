@@ -35,6 +35,9 @@ const AboutPage = () => {
               Direction.
             </span>
           </h1>
+          <p className="text-xl font-body text-muted-foreground mt-8 border-t border-white/5 pt-8 max-w-lg mx-auto">
+            The true origin story of <strong className="text-white">Sameera aka hopeengineer</strong>.
+          </p>
         </header>
 
         {/* Introduction */}

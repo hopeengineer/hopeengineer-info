@@ -14,7 +14,7 @@ export function HeroSection() {
             <span className="text-gradient-primary">Hope.</span>
           </h1>
           <p className="max-w-[700px] mx-auto text-muted-foreground md:text-xl font-body leading-relaxed">
-            I am Sameera, a software architect building robust, scalable systems that outlast the trends. I partner with those who are ready to stop drifting, turn their potential into purpose, and <strong className="text-emerald-400 font-medium">build something real.</strong>
+            I am Sameera aka hopeengineer, a software architect building robust, scalable systems that outlast the trends. I partner with those who are ready to stop drifting, turn their potential into purpose, and <strong className="text-emerald-400 font-medium">build something real.</strong>
           </p>
         </div>
         <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center mt-8 w-full sm:w-auto">
