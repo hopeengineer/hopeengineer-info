@@ -52,6 +52,18 @@ const nextConfig: NextConfig = {
         hostname: 'assets.skool.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.threadify.app',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'threadify.app',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

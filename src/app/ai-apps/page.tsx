@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Metadata } from 'next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { aiApps } from "@/lib/data";
@@ -11,13 +12,21 @@ import CountdownPopup from "@/components/CountdownPopup";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+export const metadata: Metadata = {
+  title: 'AI Apps & Automations',
+  description: 'A collection of custom-built artificial intelligence applications and data automations designed by HopeEngineer to solve real-world problems.',
+  alternates: {
+    canonical: '/ai-apps',
+  },
+};
+
 const AiAppsPage = () => {
   return (
     <div className="relative">
       <div className="absolute inset-0 z-0">
         <AnimatedBackground><div/></AnimatedBackground>
       </div>
-      <div className="relative z-10 container max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 container max-w-6xl mx-auto pt-32 pb-12 px-4 sm:px-6 lg:px-8">
         <CountdownPopup />
         <header className="text-center mb-12">
           <h1 className="text-4xl font-headline font-extrabold tracking-tight sm:text-5xl md:text-6xl">
@@ -61,7 +70,7 @@ const AiAppsPage = () => {
                   <CardDescription className="flex-1">{app.description}</CardDescription>
                   <Button asChild variant="outline" className="mt-4 w-full" disabled={!isAvailable}>
                     {isAvailable ? (
-                      <Link href={app.href}>
+                      <Link href={app.href} target="_blank" rel="noopener noreferrer">
                         Launch App
                         <ArrowUpRight className="ml-2 h-4 w-4" />
                       </Link>

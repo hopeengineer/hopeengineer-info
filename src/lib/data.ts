@@ -119,8 +119,8 @@ export const services = [
     title: "Full Circle ⭕",
     tagline: "Where community becomes the engine for your impact",
     description: [
-      "Join our paid school, led by me and 3 other experts. This isn't just a course; it's a collaborative ecosystem. We merge group lessons with personalized guidance to build your influence together.",
-      "✓ Group Coaching with 4 Experts",
+      "Join our paid school, led by me, <a href='https://www.threads.com/@lennox_saint' target='_blank' rel='noopener noreferrer' class='font-medium text-foreground hover:text-accent transition-colors' style='text-decoration:none;'>Lennox</a>, and <a href='https://www.threads.com/@yassylindsay' target='_blank' rel='noopener noreferrer' class='font-medium text-foreground hover:text-accent transition-colors' style='text-decoration:none;'>Yassmine</a>. This isn't just a course; it's a collaborative ecosystem. We merge group lessons with personalized guidance to build your influence together.",
+      "✓ Group Coaching with 3 Experts",
       "✓ Shared Viral-Worthy Content Labs",
       "✓ Systems for Co-Growth & Monetization",
     ],
@@ -143,10 +143,10 @@ export const services = [
 
 export const aiApps = [
   {
-    title: "AI Idea Generator",
-    description: "Stuck in a rut? Generate innovative ideas for your next project, blog post, or business venture.",
+    title: "Threadify",
+    description: "The ultimate AI-powered growth engine and scheduling platform designed exclusively for Threads creators.",
     image: getImage('ai-app-1'),
-    href: "/ai-apps/idea-generator",
+    href: "https://www.threadify.app/plans",
     status: 'Available',
     badge: 'Free',
   },

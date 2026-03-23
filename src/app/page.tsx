@@ -1,190 +1,47 @@
-
 'use client';
 
-import Hero from "@/components/hero";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { services } from "@/lib/data";
-import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight } from "lucide-react";
-import { useSupabase } from "@/hooks/use-supabase";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-type BlogPost = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  date: string;
-  author: string;
-  image_url: string;
-  image_hint: string;
-}
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { HeroSection } from '@/components/sections/HeroSection';
+import { AboutSection } from '@/components/sections/AboutSection';
+import { ServicesSection } from '@/components/sections/ServicesSection';
+import { BlogPreviewSection } from '@/components/sections/BlogPreviewSection';
+import { ContactCTASection } from '@/components/sections/ContactCTASection';
 
 export default function Home() {
-  const { supabase } = useSupabase();
-  const router = useRouter();
-  const [latestPosts, setLatestPosts] = useState<BlogPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function fetchPosts() {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(3);
-
-      if (error) {
-        console.warn('[Home] Failed to fetch blog posts:', error.message, error.code);
-      } else if (data) {
-        setLatestPosts(data);
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Global Cinematic Snapping Logic (80% Slower than native CSS)
+    const trigger = ScrollTrigger.create({
+      trigger: containerRef.current,
+      start: "top top",
+      end: "bottom bottom",
+      snap: {
+        snapTo: ".snap-section",
+        duration: { min: 0.8, max: 2.0 }, // Luxurious, slow animation
+        delay: 0.1, // Wait briefly after scrolling stops
+        ease: "power2.inOut"
       }
-      setIsLoading(false);
-    }
-    fetchPosts();
-  }, [supabase]);
+    });
 
-  const handleServiceClick = (service: (typeof services)[0]) => {
-    if (service.externalUrl) {
-      window.open(service.externalUrl, '_blank');
-    }
-    router.push('/work-with-me');
-  };
+    return () => {
+      trigger.kill();
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1">
-        <Hero />
-
-        <section id="newsletter" className="w-full py-12 md:py-24 lg:py-32 bg-background">
-          <div className="container px-4 md:px-6">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl">Join the Community</h2>
-              <p className="mt-4 text-muted-foreground md:text-xl/relaxed">
-                Get insights on AI, engineering, and growth delivered to your inbox.
-              </p>
-            </div>
-            <div className="mx-auto mt-8 max-w-lg">
-              <iframe
-                src="https://hopeengineer.substack.com/embed"
-                width="100%"
-                height="320"
-                style={{ border: '1px solid #EEE', background: 'white' }}
-                frameBorder="0"
-                scrolling="no"
-              ></iframe>
-            </div>
-          </div>
-        </section>
-
-
-        <section id="services" className="w-full py-12 md:py-24 lg:py-32 bg-muted/20">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-background px-3 py-1 text-sm">Our Services</div>
-                <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl">Engineering Your Impact</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Unlock your potential with my bespoke services, from one-on-one coaching to AI-powered content solutions.
-                </p>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  These are the blueprints. Choose the one that builds your future.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-3 pt-12">
-              {services.map((service) => (
-                <Card key={service.title} className="transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
-                  <CardHeader>
-                    <CardTitle className="font-headline">{service.title}</CardTitle>
-                    {service.tagline && <p className="text-sm text-foreground/90 font-semibold pt-1">{service.tagline}</p>}
-                    <CardDescription className="pt-4">
-                      {Array.isArray(service.description) ? (
-                        <div className="space-y-2">
-                          {service.description.map((line, index) => (
-                            <p key={index}>{line}</p>
-                          ))}
-                        </div>
-                      ) : (
-                        service.description
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {service.externalUrl ? (
-                      <Button className="w-full" onClick={() => handleServiceClick(service)}>
-                        Learn More <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    ) : (
-                      <Link href="/work-with-me">
-                        <Button className="w-full">
-                          Learn More <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </Link>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="blog" className="w-full py-12 md:py-24 lg:py-32 bg-background">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">From the Blog</div>
-                <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl">Latest Articles</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Explore insights on AI, engineering, and personal growth.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-3 pt-12">
-              {isLoading && (
-                [...Array(3)].map((_, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <Skeleton className="aspect-video w-full" />
-                    <CardContent className="p-6">
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <Skeleton className="h-4 w-1/2 mb-4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-5/6 mt-2" />
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-              {latestPosts?.map((post) => (
-                <Card key={post.slug} className="overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20">
-                  <Link href={`/blog/${post.slug}`} className="block">
-                    <Image
-                      src={post.image_url || 'https://picsum.photos/seed/default/600/400'}
-                      alt={post.title}
-                      width={600}
-                      height={400}
-                      className="aspect-video w-full object-cover"
-                      data-ai-hint={post.image_hint}
-                    />
-                  </Link>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-headline font-bold mb-2">{post.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{post.date}</p>
-                    <p className="text-muted-foreground line-clamp-3">{post.description}</p>
-                    <Link href={`/blog/${post.slug}`} className="mt-4 inline-block">
-                      <Button variant="link" className="px-0">Read More <ArrowRight className="ml-2 h-4 w-4" /></Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-      </main>
+    <div className="w-full relative">
+      <div ref={containerRef} className="flex flex-col w-full relative z-10">
+        <div className="snap-section w-full"><HeroSection /></div>
+        <div className="snap-section w-full"><AboutSection /></div>
+        <div className="snap-section w-full"><ServicesSection /></div>
+        <div className="snap-section w-full"><BlogPreviewSection /></div>
+        <div className="snap-section w-full"><ContactCTASection /></div>
+      </div>
     </div>
   );
 }
