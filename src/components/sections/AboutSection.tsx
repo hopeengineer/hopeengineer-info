@@ -18,13 +18,13 @@ export function AboutSection() {
           
           <div className="space-y-6 text-muted-foreground md:text-lg font-body leading-relaxed max-w-2xl mx-auto text-left sm:text-center">
             <p>
-              After years of building systems, chasing growth, and living fast, the mission shifted. I realized that technology should not just advance the world - it must uplift humanity.
+              I left a stable tech career in the UK at a time when most people would have stayed. From the outside, my life looked "figured out," but behind the scenes, I was losing control to a lifestyle of escaping reality.
             </p>
             <p>
-              Today, my work flows through <strong className="text-white">S-ION</strong> (Sustainable Impact-Oriented Network). Every digital product, AI architecture, and automation system I engineer must pass one filter: <em className="text-primary/90">"Does this make life better for people and the planet?"</em>
+              In August 2023, I hit a profound breaking point. I made the decision to walk away from everything - quitting substances, leaving the UK, and returning to Sri Lanka to completely reset. 
             </p>
             <p className="text-sm md:text-base border-t border-white/10 pt-6 mt-6 text-white/70">
-              If S-ION is the engine, the <strong className="text-white">S-ION Foundation</strong> is the soul - ensuring education, resources, and sustainable opportunities reach the underserved communities that need them most.
+              That pain turned into direction. Today, my engineering flows exclusively through <strong className="text-white">S-ION</strong> - building scalable technology and AI systems designed not for validation, but to create real impact and redirection for others.
             </p>
           </div>
           

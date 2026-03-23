@@ -9,13 +9,12 @@ export function HeroSection() {
     <div className="container relative h-screen flex flex-col justify-center px-4 md:px-6 z-10 w-full">
       <div className="flex flex-col items-center text-center max-w-4xl mx-auto w-full">
         <div className="space-y-6">
-          <h1 className="text-5xl font-headline font-bold tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl/none text-foreground drop-shadow-2xl">
-            Engineer <br className="hidden sm:block" />
-            Your <span className="text-gradient-primary">Hope</span>.
+          <h1 className="text-5xl font-headline font-bold tracking-tighter sm:text-6xl md:text-[5.5rem] lg:text-[7rem] leading-[1.1] text-foreground drop-shadow-2xl">
+            Engineer Your <br className="hidden sm:block" />
+            <span className="text-gradient-primary">Hope.</span>
           </h1>
           <p className="max-w-[700px] mx-auto text-muted-foreground md:text-xl font-body leading-relaxed">
-            Technology should not just advance the world - it should uplift humanity. 
-            Building <span className="text-primary/90 font-semibold">S-ION</span> (Sustainable Impact-Oriented Network): an ecosystem where engineering meets empathy to protect the planet and empower people.
+            I am Sameera, a software architect building robust, scalable systems that outlast the trends. I partner with those who are ready to stop drifting, turn their potential into purpose, and <strong className="text-emerald-400 font-medium">build something real.</strong>
           </p>
         </div>
         <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center mt-8 w-full sm:w-auto">

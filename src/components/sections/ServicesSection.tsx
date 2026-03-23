@@ -12,12 +12,12 @@ export function ServicesSection() {
     <ScrollSection triggerOffset="top 80%" className="min-h-[120vh] py-24 md:py-32 flex items-center">
       <div className="container px-4 md:px-6 z-10">
         <div className="mb-16 md:mb-24 flex flex-col items-center text-center">
-          <h2 className="text-sm font-code tracking-[0.2em] text-primary uppercase mb-4">The S-ION Ecosystem</h2>
+          <h2 className="text-sm font-code tracking-[0.2em] text-primary uppercase mb-4">Engineering Expertise</h2>
           <h3 className="text-4xl md:text-6xl font-headline font-bold text-gradient-light max-w-3xl leading-tight">
-            Scalable Impact <br/> Architecture
+            Scalable Systems <br/> & Architecture
           </h3>
           <p className="max-w-[700px] mt-6 text-muted-foreground md:text-xl font-body">
-            From eco-friendly web infrastructure to AI-driven empowerment tools, every solution is built to sit at the intersection of Sustainability, Technology, and Humanity.
+            From high-performance web infrastructure to AI-driven automation, I build robust, production-ready technology designed to scale seamlessly and create real impact.
           </p>
         </div>
 
